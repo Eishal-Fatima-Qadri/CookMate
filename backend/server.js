@@ -1,17 +1,30 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const sql = require('mssql');
 const cors = require('cors');
 const {poolPromise} = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
+const recipeRoutes = require('./routes/recipes');
+const path = require('path');
 
-// Load environment variables
-dotenv.config();
+const config = {
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    server: process.env.DB_SERVER,
+    database: process.env.DB_NAME,
+    authentication: {
+        type: 'default'
+    },
+    options: {
+        encrypt: true, // For Azure SQL
+        trustServerCertificate: false // Change to true for local dev / self-signed certs
+    }
+};
 
 const app = express();
-
-// Middleware
 app.use(cors());
 app.use(express.json()); // Parse JSON bodies
+app.use(express.static(path.join(__dirname, 'client/build')));
 
 // Check database connection
 app.use(async (req, res, next) => {
@@ -24,12 +37,29 @@ app.use(async (req, res, next) => {
     }
 });
 
-// Routes
+// Users
 app.use('/api/users', userRoutes);
 
-// Basic route
+// Recipes
 app.get('/', (req, res) => {
     res.send('API is running...');
+});
+
+app.get('/api/recipes', async (req, res) => {
+    try {
+        await sql.connect(config);
+        const result = await sql.query`SELECT * FROM Recipes`;
+        res.json(result.recordset);
+    } catch (err) {
+        console.error('Error fetching recipes:', err);
+        res.status(500).send('Database error');
+    }
+});
+app.use('/api/recipes', recipeRoutes); // your actual API
+
+// Catch-all for frontend routes
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 });
 
 // Error handler
