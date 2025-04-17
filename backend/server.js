@@ -1,7 +1,7 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const { poolPromise } = require('./config/db');
+const {poolPromise} = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
 
 // Load environment variables

@@ -1,9 +1,9 @@
 import React from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import {Navigate, Outlet} from 'react-router-dom';
+import {useAuth} from '../context/AuthContext';
 
 const ProtectedRoute = () => {
-    const { user, loading } = useAuth();
+    const {user, loading} = useAuth();
 
     // Show loading spinner or placeholder while checking authentication
     if (loading) {
@@ -16,11 +16,11 @@ const ProtectedRoute = () => {
 
     // If not authenticated, redirect to login
     if (!user) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/login" replace/>;
     }
 
     // If authenticated, render the child routes
-    return <Outlet />;
+    return <Outlet/>;
 };
 
 export default ProtectedRoute;

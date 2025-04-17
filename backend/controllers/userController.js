@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const { sql } = require('../config/db');
+const {sql} = require('../config/db');
 const generateToken = require('../utils/generateToken');
 
 // @desc    Auth user & get token
@@ -7,18 +7,18 @@ const generateToken = require('../utils/generateToken');
 // @access  Public
 const loginUser = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const {email, password} = req.body;
 
         if (!email || !password) {
-            return res.status(400).json({ message: 'Please provide email and password' });
+            return res.status(400).json({message: 'Please provide email and password'});
         }
 
         // Direct SQL query to find user by email
         const query = `
-      SELECT user_id, username, email, password, role
-      FROM Users
-      WHERE email = @email
-    `;
+            SELECT user_id, username, email, password, role
+            FROM Users
+            WHERE email = @email
+        `;
 
         const pool = req.pool;
         const result = await pool.request()
@@ -28,14 +28,14 @@ const loginUser = async (req, res) => {
         const user = result.recordset[0];
 
         if (!user) {
-            return res.status(401).json({ message: 'Invalid email or password' });
+            return res.status(401).json({message: 'Invalid email or password'});
         }
 
         // Check if password matches
         const isMatch = await bcrypt.compare(password, user.password);
 
         if (!isMatch) {
-            return res.status(401).json({ message: 'Invalid email or password' });
+            return res.status(401).json({message: 'Invalid email or password'});
         }
 
         res.json({
@@ -48,7 +48,7 @@ const loginUser = async (req, res) => {
 
     } catch (error) {
         console.error('Login error:', error);
-        res.status(500).json({ message: 'Server Error' });
+        res.status(500).json({message: 'Server Error'});
     }
 };
 
@@ -57,10 +57,10 @@ const loginUser = async (req, res) => {
 // @access  Public
 const registerUser = async (req, res) => {
     try {
-        const { username, email, password, dietary_preferences = '', allergens = '', favorite_cuisines = '' } = req.body;
+        const {username, email, password, dietary_preferences = '', allergens = '', favorite_cuisines = ''} = req.body;
 
         if (!username || !email || !password) {
-            return res.status(400).json({ message: 'Please provide all required fields' });
+            return res.status(400).json({message: 'Please provide all required fields'});
         }
 
         // Check if user already exists
@@ -70,7 +70,7 @@ const registerUser = async (req, res) => {
             .query('SELECT email FROM Users WHERE email = @email');
 
         if (userCheck.recordset.length > 0) {
-            return res.status(400).json({ message: 'User already exists' });
+            return res.status(400).json({message: 'User already exists'});
         }
 
         // Hash password
@@ -79,10 +79,11 @@ const registerUser = async (req, res) => {
 
         // Direct SQL query to insert user
         const insertQuery = `
-      INSERT INTO Users (username, email, password, role, dietary_preferences, allergens, favorite_cuisines, created_at)
-      OUTPUT INSERTED.user_id, INSERTED.username, INSERTED.email, INSERTED.role
-      VALUES (@username, @email, @password, @role, @dietary_preferences, @allergens, @favorite_cuisines, GETDATE())
-    `;
+            INSERT INTO Users (username, email, password, role, dietary_preferences, allergens, favorite_cuisines,
+                               created_at)
+                OUTPUT INSERTED.user_id, INSERTED.username, INSERTED.email, INSERTED.role
+            VALUES (@username, @email, @password, @role, @dietary_preferences, @allergens, @favorite_cuisines, GETDATE())
+        `;
 
         const result = await pool.request()
             .input('username', sql.VarChar(50), username)
@@ -105,12 +106,12 @@ const registerUser = async (req, res) => {
                 token: generateToken(newUser.user_id)
             });
         } else {
-            res.status(400).json({ message: 'Invalid user data' });
+            res.status(400).json({message: 'Invalid user data'});
         }
 
     } catch (error) {
         console.error('Registration error:', error);
-        res.status(500).json({ message: 'Server Error' });
+        res.status(500).json({message: 'Server Error'});
     }
 };
 
@@ -123,10 +124,10 @@ const getUserProfile = async (req, res) => {
         const result = await pool.request()
             .input('userId', sql.Int, req.user.id)
             .query(`
-        SELECT user_id, username, email, role, dietary_preferences, allergens, favorite_cuisines
-        FROM Users 
-        WHERE user_id = @userId
-      `);
+                SELECT user_id, username, email, role, dietary_preferences, allergens, favorite_cuisines
+                FROM Users
+                WHERE user_id = @userId
+            `);
 
         const user = result.recordset[0];
 
@@ -141,12 +142,12 @@ const getUserProfile = async (req, res) => {
                 favorite_cuisines: user.favorite_cuisines
             });
         } else {
-            res.status(404).json({ message: 'User not found' });
+            res.status(404).json({message: 'User not found'});
         }
 
     } catch (error) {
         console.error('Get profile error:', error);
-        res.status(500).json({ message: 'Server Error' });
+        res.status(500).json({message: 'Server Error'});
     }
 };
 
@@ -155,7 +156,7 @@ const getUserProfile = async (req, res) => {
 // @access  Private
 const updateUserProfile = async (req, res) => {
     try {
-        const { username, email, password, dietary_preferences, allergens, favorite_cuisines } = req.body;
+        const {username, email, password, dietary_preferences, allergens, favorite_cuisines} = req.body;
 
         const pool = req.pool;
 
@@ -165,7 +166,7 @@ const updateUserProfile = async (req, res) => {
             .query('SELECT * FROM Users WHERE user_id = @userId');
 
         if (userResult.recordset.length === 0) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({message: 'User not found'});
         }
 
         const user = userResult.recordset[0];
@@ -210,7 +211,7 @@ const updateUserProfile = async (req, res) => {
 
         // If nothing to update
         if (updateFields.length === 0) {
-            return res.status(400).json({ message: 'No fields to update' });
+            return res.status(400).json({message: 'No fields to update'});
         }
 
         updateQuery += updateFields.join(', ');
@@ -231,12 +232,12 @@ const updateUserProfile = async (req, res) => {
                 favorite_cuisines: updatedUser.favorite_cuisines
             });
         } else {
-            res.status(500).json({ message: 'Update failed' });
+            res.status(500).json({message: 'Update failed'});
         }
 
     } catch (error) {
         console.error('Update profile error:', error);
-        res.status(500).json({ message: 'Server Error' });
+        res.status(500).json({message: 'Server Error'});
     }
 };
 

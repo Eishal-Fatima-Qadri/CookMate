@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { sql } = require('../config/db');
+const {sql} = require('../config/db');
 
 const protect = async (req, res, next) => {
     let token;
@@ -18,10 +18,10 @@ const protect = async (req, res, next) => {
             const result = await pool.request()
                 .input('userId', sql.Int, decoded.id)
                 .query(`
-          SELECT user_id, username, email, role
-          FROM Users
-          WHERE user_id = @userId
-        `);
+                    SELECT user_id, username, email, role
+                    FROM Users
+                    WHERE user_id = @userId
+                `);
 
             // If user found, attach to request object
             if (result.recordset.length > 0) {
@@ -33,14 +33,14 @@ const protect = async (req, res, next) => {
                 };
                 next();
             } else {
-                res.status(401).json({ message: 'Not authorized, user not found' });
+                res.status(401).json({message: 'Not authorized, user not found'});
             }
         } catch (error) {
             console.error('Auth middleware error:', error);
-            res.status(401).json({ message: 'Not authorized, token failed' });
+            res.status(401).json({message: 'Not authorized, token failed'});
         }
     } else {
-        res.status(401).json({ message: 'Not authorized, no token' });
+        res.status(401).json({message: 'Not authorized, no token'});
     }
 };
 
@@ -49,8 +49,8 @@ const admin = (req, res, next) => {
     if (req.user && req.user.role === 'admin') {
         next();
     } else {
-        res.status(403).json({ message: 'Not authorized as admin' });
+        res.status(403).json({message: 'Not authorized as admin'});
     }
 };
 
-module.exports = { protect, admin };
+module.exports = {protect, admin};
