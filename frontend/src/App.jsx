@@ -3,7 +3,6 @@ import {Route, Routes} from "react-router-dom";
 import Home from "./pages/home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import RecipeSuggestions from "./pages/RecipeSuggestions";
 import Footer from "./components/Footer.jsx";
 import Header from "./components/Header.jsx";
 import Pantry from "./pages/pantry";
