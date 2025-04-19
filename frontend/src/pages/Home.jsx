@@ -1,7 +1,7 @@
 // pages/Home.jsx
 import React from "react";
 import {Link} from "react-router-dom";
-import foodJpg from "../../public/food-hero.jpg";
+import foodJpg from "../food-hero.jpg";
 
 export default function Home() {
     return (

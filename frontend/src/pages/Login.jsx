@@ -49,8 +49,13 @@ export default function Login() {
             setUser(data);
             localStorage.setItem('userInfo', JSON.stringify(data));
 
-            // Redirect to home page
-            navigate('/');
+            // Redirect based on user role
+            if (data && data.role === 'admin') {
+                navigate('/admin-dashboard');
+            } else {
+                navigate('/');
+            }
+
         } catch (err) {
             setError(err.message);
         } finally {

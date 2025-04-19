@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const {sql} = require('../config/db');
 const generateToken = require('../utils/generateToken');
+const requireAuth = require('../middleware/authMiddleware'); // Assuming you have an auth middleware
 
 // @desc    Auth user & get token
 // @route   POST /api/users/login
@@ -13,14 +14,13 @@ const loginUser = async (req, res) => {
             return res.status(400).json({message: 'Please provide email and password'});
         }
 
-        // Direct SQL query to find user by email
+        const pool = req.pool;
         const query = `
             SELECT user_id, username, email, password, role
             FROM Users
             WHERE email = @email
         `;
 
-        const pool = req.pool;
         const result = await pool.request()
             .input('email', sql.VarChar(100), email)
             .query(query);
@@ -31,8 +31,8 @@ const loginUser = async (req, res) => {
             return res.status(401).json({message: 'Invalid email or password'});
         }
 
-        // Check if password matches
         const isMatch = await bcrypt.compare(password, user.password);
+        console.log(password, user.password, isMatch);
 
         if (!isMatch) {
             return res.status(401).json({message: 'Invalid email or password'});
@@ -63,7 +63,6 @@ const registerUser = async (req, res) => {
             return res.status(400).json({message: 'Please provide all required fields'});
         }
 
-        // Check if user already exists
         const pool = req.pool;
         const userCheck = await pool.request()
             .input('email', sql.VarChar(100), email)
@@ -73,16 +72,18 @@ const registerUser = async (req, res) => {
             return res.status(400).json({message: 'User already exists'});
         }
 
-        // Hash password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Direct SQL query to insert user
         const insertQuery = `
             INSERT INTO Users (username, email, password, role, dietary_preferences, allergens, favorite_cuisines,
                                created_at)
-                OUTPUT INSERTED.user_id, INSERTED.username, INSERTED.email, INSERTED.role
-            VALUES (@username, @email, @password, @role, @dietary_preferences, @allergens, @favorite_cuisines, GETDATE())
+            OUTPUT INSERTED.user_id,
+                   INSERTED.username,
+                   INSERTED.email,
+                   INSERTED.role
+            VALUES (@username, @email, @password, @role, @dietary_preferences, @allergens, @favorite_cuisines,
+                    GETDATE())
         `;
 
         const result = await pool.request()
@@ -160,7 +161,6 @@ const updateUserProfile = async (req, res) => {
 
         const pool = req.pool;
 
-        // First, get the current user data
         const userResult = await pool.request()
             .input('userId', sql.Int, req.user.id)
             .query('SELECT * FROM Users WHERE user_id = @userId');
@@ -169,9 +169,6 @@ const updateUserProfile = async (req, res) => {
             return res.status(404).json({message: 'User not found'});
         }
 
-        const user = userResult.recordset[0];
-
-        // Build the update query dynamically
         let updateQuery = 'UPDATE Users SET ';
         const updateFields = [];
         const request = pool.request()
@@ -209,7 +206,6 @@ const updateUserProfile = async (req, res) => {
             request.input('favorite_cuisines', sql.VarChar(255), favorite_cuisines);
         }
 
-        // If nothing to update
         if (updateFields.length === 0) {
             return res.status(400).json({message: 'No fields to update'});
         }
@@ -241,9 +237,27 @@ const updateUserProfile = async (req, res) => {
     }
 };
 
+// Middleware to check if the user is an admin
+const isAdmin = (req, res, next) => {
+    if (req.user && req.user.role === 'admin') {
+        next();
+    } else {
+        return res.status(403).json({message: 'Not authorized as an admin'});
+    }
+};
+
+// @desc    Get blank admin page (requires admin role)
+// @route   GET /api/admin
+// @access  Private (Admin only)
+const getAdminPage = (req, res) => {
+    res.json({message: 'Welcome to the Admin Page!'}); // You can render an HTML page here if needed
+};
+
 module.exports = {
     loginUser,
     registerUser,
     getUserProfile,
-    updateUserProfile
+    updateUserProfile,
+    isAdmin,
+    getAdminPage
 };

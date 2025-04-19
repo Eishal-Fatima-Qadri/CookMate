@@ -1,28 +1,24 @@
+require('dotenv').config();
 const sql = require('mssql');
-require('dotenv').config({path: './.env'});
-const config = {
+
+const poolPromise = new sql.ConnectionPool({
     user: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     server: process.env.DB_SERVER,
     database: process.env.DB_NAME,
-    authentication: {
-        type: 'default'
-    },
     options: {
-        encrypt: true, // For Azure SQL
-        trustServerCertificate: false // Change to true for local dev / self-signed certs
+        encrypt: true,
+        trustServerCertificate: process.env.NODE_ENV !== 'production'
     }
-};
-
-const poolPromise = new sql.ConnectionPool(config)
+})
     .connect()
     .then(pool => {
-        console.log('Connected to SQL Server');
+        console.log('✅ MSSQL pool connected');
         return pool;
     })
-    .catch(err => console.error('Database Connection Failed: ', err));
+    .catch(err => {
+        console.error('❌ MSSQL pool failed to connect:', err);
+        throw err;
+    });
 
-module.exports = {
-    sql,
-    poolPromise
-};
+module.exports = {poolPromise, sql};

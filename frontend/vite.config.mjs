@@ -7,5 +7,10 @@ export default defineConfig({
     plugins: [react(), tailwindcss()],
     server: {
         open: true,
+        '/api': {
+            target: 'http://localhost:5000', // Your Express server port
+            changeOrigin: true,
+            secure: false,
+        },
     },
 });

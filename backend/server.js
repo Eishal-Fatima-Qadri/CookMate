@@ -1,29 +1,20 @@
 const express = require('express');
-const sql = require('mssql');
 const cors = require('cors');
 const {poolPromise} = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
 const recipeRoutes = require('./routes/recipes');
 const path = require('path');
-
-const config = {
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    server: process.env.DB_SERVER,
-    database: process.env.DB_NAME,
-    authentication: {
-        type: 'default'
-    },
-    options: {
-        encrypt: true, // For Azure SQL
-        trustServerCertificate: false // Change to true for local dev / self-signed certs
-    }
-};
-
 const app = express();
+
+// Debug middleware - add this to see all incoming requests
+app.use((req, res, next) => {
+    console.log(`Request received: ${req.method} ${req.path}`);
+    next();
+});
+
 app.use(cors());
 app.use(express.json()); // Parse JSON bodies
-app.use(express.static(path.join(__dirname, 'client/build')));
+app.use(express.urlencoded({extended: false}));
 
 // Check database connection
 app.use(async (req, res, next) => {
@@ -36,30 +27,36 @@ app.use(async (req, res, next) => {
     }
 });
 
-// Users
+// Set up API routes FIRST, before any static/catch-all routes
 app.use('/api/users', userRoutes);
+app.use('/api/recipes', recipeRoutes);
 
-// Recipes
+// API root response
+app.get('/api', (req, res) => {
+    res.json({message: 'API is running...'});
+});
+
+// Root route
 app.get('/', (req, res) => {
-    res.send('API is running...');
+    res.send('Server is running...');
 });
 
-app.get('/api/recipes', async (req, res) => {
-    try {
-        await sql.connect(config);
-        const result = await sql.query`SELECT * FROM Recipes`;
-        res.json(result.recordset);
-    } catch (err) {
-        console.error('Error fetching recipes:', err);
-        res.status(500).send('Database error');
-    }
-});
-app.use('/api/recipes', recipeRoutes); // your actual API
-
-// Catch-all for frontend routes
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
-});
+// Static files and catch-all
+if (process.env.NODE_ENV === 'production') {
+    // Set static folder
+    app.use(express.static('dist'));
+    // Serve the index.html file for any route that doesn't match an API route
+    app.get('*', (req, res) => {
+        res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
+    });
+} else {
+    // Development mode
+    app.use(express.static(path.join(__dirname, 'client/build')));
+    // Catch-all for frontend routes in development
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(__dirname, '../frontend/', 'index.html'));
+    });
+}
 
 // Error handler
 app.use((err, req, res, next) => {
@@ -72,7 +69,6 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-
 app.listen(
     PORT,
     console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`)
