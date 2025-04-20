@@ -19,3 +19,7 @@ Thumbs.db
 # Env files
 .env
 .env.*
+/.idea/discord.xml
+/.idea/git_toolbox_prj.xml
+/.idea/workspace.xml
+/.idea/vcs.xml
