@@ -1,23 +1,25 @@
 import React from 'react';
 import {Route, Routes, useLocation} from 'react-router-dom'; // Import useLocation
 import {AuthProvider} from './context/AuthContext'; // Adjust the path if needed
-import Home from './pages/Home.jsx';
+import Home from './pages/User/Home.jsx';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Footer from './components/Footer';
 import Header from './components/Header';
-import Pantry from './pages/Pantry.jsx';
-import ProtectedRoute from './components/ProtectedRoute';
-import RecipePage from './pages/RecipePage';
-import RecipeDetail from './components/RecipeDetail';
-import AdminDashboard from './pages/AdminDashboard';
-import AdminProtectedRoute from './components/AdminProtectedRoute';
+import Pantry from './pages/User/Pantry.jsx';
+import ProtectedRoute from './components/Utils/ProtectedRoute.jsx';
+import RecipePage from './pages/User/RecipePage.jsx';
+import RecipeDetail from './components/Users/RecipeDetail.jsx';
+import AdminDashboard from './pages/Admin/AdminDashboard.jsx';
+import AdminProtectedRoute from './components/Utils/AdminProtectedRoute.jsx';
+import ManageRecipes from "./components/Admin/ManageRecipes.jsx";
+import IngredientDatabase from "./components/Admin/IngredientsDatabase.jsx";
 
 const App = () => {
     const location = useLocation();  // Get the current location
 
     // Define routes where you want to exclude Header and Footer
-    const excludeHeaderFooterRoutes = ['/admin-dashboard']; // Add more routes as needed
+    const excludeHeaderFooterRoutes = ['/login', '/register', '/admin/dashboard',"/admin/recipes", "/admin/ingredients"]; // Add more routes as needed
 
     // Check if the current route is in the exclusion list
     const shouldShowHeaderFooter = !excludeHeaderFooterRoutes.includes(location.pathname);
@@ -34,8 +36,10 @@ const App = () => {
                 {/* Protected Routes */}
                 <Route element={<ProtectedRoute/>}>
                     <Route path="/pantry" element={<Pantry/>}/>
-                    <Route path="/admin-dashboard"
+                    <Route path="/admin/dashboard"
                            element={<AdminProtectedRoute><AdminDashboard/></AdminProtectedRoute>}/>
+                    <Route path="/admin/recipes" element={<ManageRecipes />} />
+                    <Route path="/admin/ingredients" element={<IngredientDatabase />} />
                 </Route>
                 <Route
                     path="*"

@@ -1,6 +1,6 @@
 import React from 'react';
 import {Navigate} from 'react-router-dom';
-import {useAuth} from '../context/AuthContext'; // Adjust the path if needed
+import {useAuth} from '../../context/AuthContext.jsx'; // Adjust the path if needed
 
 const AdminProtectedRoute = ({children}) => {
     const {user, loading, isAdmin} = useAuth(); // Use the isAdmin function from useAuth

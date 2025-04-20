@@ -41,6 +41,10 @@ app.get('/', (req, res) => {
     res.send('Server is running...');
 });
 
+app.get('/api/recipes', (req, res) => {
+    res.json(recipes); // Send back as JSON
+});
+
 // Static files and catch-all
 if (process.env.NODE_ENV === 'production') {
     // Set static folder
