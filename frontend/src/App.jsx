@@ -12,47 +12,47 @@ import RecipePage from './pages/User/RecipePage.jsx';
 import RecipeDetail from './components/Users/RecipeDetail.jsx';
 import AdminDashboard from './pages/Admin/AdminDashboard.jsx';
 import AdminProtectedRoute from './components/Utils/AdminProtectedRoute.jsx';
-import ManageRecipes from "./components/Admin/ManageRecipes.jsx";
-import IngredientDatabase from "./components/Admin/IngredientsDatabase.jsx";
+import ManageRecipes from "./pages/Admin/ManageRecipes.jsx";
+import IngredientDatabase from "./pages/Admin/IngredientsDatabase.jsx";
+import EditRecipe from "./pages/Admin/EditRecipe.jsx";
 
 const App = () => {
     const location = useLocation();  // Get the current location
 
     // Define routes where you want to exclude Header and Footer
-    const excludeHeaderFooterRoutes = ['/login', '/register', '/admin/dashboard',"/admin/recipes", "/admin/ingredients"]; // Add more routes as needed
+    const excludeHeaderFooterRoutes = ['/login', '/register', '/admin/dashboard', '/admin/recipes', '/admin/recipes/add', '/admin/recipes/edit/:id', '/admin/ingredients', '/admin/recipes/add'];
 
-    // Check if the current route is in the exclusion list
-    const shouldShowHeaderFooter = !excludeHeaderFooterRoutes.includes(location.pathname);
+    // Check if the current route is in the exclusion list or starts with an excluded path
+    const shouldShowHeaderFooter = !excludeHeaderFooterRoutes.some(route => location.pathname === route || (route.includes(':') && location.pathname.startsWith(route.split(':')[0])));
 
-    return (
-        <AuthProvider>
-            {shouldShowHeaderFooter && <Header/>} {/* Conditional rendering */}
-            <Routes>
-                <Route path="/" element={<Home/>}/>
-                <Route path="/login" element={<Login/>}/>
-                <Route path="/register" element={<Register/>}/>
-                <Route path="/recipes" element={<RecipePage/>}/>
-                <Route path="/recipe/:id" element={<RecipeDetail/>}/>
-                {/* Protected Routes */}
-                <Route element={<ProtectedRoute/>}>
-                    <Route path="/pantry" element={<Pantry/>}/>
-                    <Route path="/admin/dashboard"
-                           element={<AdminProtectedRoute><AdminDashboard/></AdminProtectedRoute>}/>
-                    <Route path="/admin/recipes" element={<ManageRecipes />} />
-                    <Route path="/admin/ingredients" element={<IngredientDatabase />} />
-                </Route>
-                <Route
-                    path="*"
-                    element={
-                        <h2 className="text-center mt-20 text-red-500">
-                            404 - Page Not Found
-                        </h2>
-                    }
-                />
-            </Routes>
-            {shouldShowHeaderFooter && <Footer/>} {/* Conditional rendering */}
-        </AuthProvider>
-    );
+    return (<AuthProvider>
+        {shouldShowHeaderFooter && <Header/>}
+        <Routes>
+            <Route path="/" element={<Home/>}/>
+            <Route path="/login" element={<Login/>}/>
+            <Route path="/register" element={<Register/>}/>
+            <Route path="/recipes" element={<RecipePage/>}/>
+            <Route path="/recipe/:id" element={<RecipeDetail/>}/>
+            <Route path="/admin/recipes/add" element={<EditRecipe/>}/>
+            <Route path="/admin/recipes/edit/:id" element={<EditRecipe/>}/>
+
+            {/* Protected Routes */}
+            <Route element={<ProtectedRoute/>}>
+                <Route path="/pantry" element={<Pantry/>}/>
+                <Route path="/admin/dashboard"
+                       element={<AdminProtectedRoute><AdminDashboard/></AdminProtectedRoute>}/>
+                <Route path="/admin/recipes" element={<ManageRecipes/>}/>
+                <Route path="/admin/ingredients" element={<IngredientDatabase/>}/>
+            </Route>
+            <Route
+                path="*"
+                element={<h2 className="text-center mt-20 text-red-500">
+                    404 - Page Not Found
+                </h2>}
+            />
+        </Routes>
+        {shouldShowHeaderFooter && <Footer/>}
+    </AuthProvider>);
 };
 
 export default App;

@@ -1,9 +1,9 @@
 // UserContext.js
-import { createContext, useContext, useEffect, useState } from 'react';
+import {createContext, useContext, useEffect, useState} from 'react';
 
 const UserContext = createContext(null);
 
-export function UserProvider({ children }) {
+export function UserProvider({children}) {
     const [user, setUser] = useState(null);
 
     // This only runs once on initial load

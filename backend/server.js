@@ -3,6 +3,7 @@ const cors = require('cors');
 const {poolPromise} = require('./config/db');
 const userRoutes = require('./routes/userRoutes');
 const recipeRoutes = require('./routes/recipes');
+const ingredientRoutes = require('./routes/ingredients');
 const path = require('path');
 const app = express();
 
@@ -30,6 +31,7 @@ app.use(async (req, res, next) => {
 // Set up API routes FIRST, before any static/catch-all routes
 app.use('/api/users', userRoutes);
 app.use('/api/recipes', recipeRoutes);
+app.use('/api/ingredients', ingredientRoutes);
 
 // API root response
 app.get('/api', (req, res) => {
@@ -39,10 +41,6 @@ app.get('/api', (req, res) => {
 // Root route
 app.get('/', (req, res) => {
     res.send('Server is running...');
-});
-
-app.get('/api/recipes', (req, res) => {
-    res.json(recipes); // Send back as JSON
 });
 
 // Static files and catch-all

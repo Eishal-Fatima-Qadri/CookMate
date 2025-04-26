@@ -30,20 +30,25 @@ router.get('/search', async (req, res) => {
     try {
         const pool = req.pool;
         const query = req.query.query;
+
+        // Using parameterized query to prevent SQL injection
         const searchQuery = `
             SELECT r.*
             FROM Recipes r
-            WHERE r.title LIKE '%${query}%'
-               OR r.description LIKE '%${query}%'
+            WHERE r.title LIKE @query
+               OR r.description LIKE @query
             UNION
             SELECT DISTINCT r.*
             FROM Recipes r
                      JOIN RecipeIngredients ri ON r.recipe_id = ri.recipe_id
                      JOIN Ingredients i ON ri.ingredient_id = i.ingredient_id
-            WHERE i.name LIKE '%${query}%'
+            WHERE i.name LIKE @query
         `;
 
-        const result = await pool.request().query(searchQuery);
+        const request = pool.request();
+        request.input('query', `%${query}%`);
+        const result = await request.query(searchQuery);
+
         res.json(result.recordset);
     } catch (err) {
         console.error('Error in GET /recipes/search:', err);
@@ -57,13 +62,16 @@ router.get('/:id', async (req, res) => {
         const pool = req.pool;
         const recipeId = parseInt(req.params.id);
 
-        // Fetch recipe details
+        // Using parameterized query
         const recipeQuery = `
             SELECT *
             FROM Recipes
-            WHERE recipe_id = ${recipeId}
+            WHERE recipe_id = @recipeId
         `;
-        const recipeResult = await pool.request().query(recipeQuery);
+
+        const request = pool.request();
+        request.input('recipeId', recipeId);
+        const recipeResult = await request.query(recipeQuery);
 
         if (recipeResult.recordset.length === 0) {
             return res.status(404).json({status: 'error', message: 'Recipe not found'});
@@ -76,19 +84,25 @@ router.get('/:id', async (req, res) => {
             SELECT i.ingredient_id, i.name, ri.quantity, ri.unit
             FROM Ingredients i
                      JOIN RecipeIngredients ri ON i.ingredient_id = ri.ingredient_id
-            WHERE ri.recipe_id = ${recipeId}
+            WHERE ri.recipe_id = @recipeId
         `;
-        const ingredientsResult = await pool.request().query(ingredientsQuery);
+
+        const ingredientsRequest = pool.request();
+        ingredientsRequest.input('recipeId', recipeId);
+        const ingredientsResult = await ingredientsRequest.query(ingredientsQuery);
         recipe.ingredients = ingredientsResult.recordset;
 
         // Fetch steps for the recipe
         const stepsQuery = `
             SELECT step_number, description
             FROM RecipeSteps
-            WHERE recipe_id = ${recipeId}
+            WHERE recipe_id = @recipeId
             ORDER BY step_number ASC;
         `;
-        const stepsResult = await pool.request().query(stepsQuery);
+
+        const stepsRequest = pool.request();
+        stepsRequest.input('recipeId', recipeId);
+        const stepsResult = await stepsRequest.query(stepsQuery);
         recipe.steps = stepsResult.recordset;
 
         res.json(recipe);
@@ -102,23 +116,71 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         const pool = req.pool;
-        const {title, description, instructions, cooking_time, difficulty, cuisine_type, created_by} = req.body; // Adjusted to match schema
+        const {title, description, instructions, cooking_time, difficulty, cuisine_type, created_by = 1} = req.body;
 
+        // Using parameterized query to prevent SQL injection and handle string escaping properly
         const insertQuery = `
             INSERT INTO Recipes (title, description, cooking_time, difficulty, cuisine_type, instructions, created_by,
                                  created_at, updated_at)
-            VALUES ('${title}', '${description}', ${cooking_time}, '${difficulty}', '${cuisine_type}', '${instructions}
-                    ', ${created_by}, GETDATE(), GETDATE());
+            VALUES (@title, @description, @cooking_time, @difficulty, @cuisine_type, @instructions, @created_by,
+                    GETDATE(), GETDATE());
             SELECT SCOPE_IDENTITY() AS recipe_id;
         `;
 
-        const result = await pool.request().query(insertQuery);
+        const request = pool.request();
+        request.input('title', title);
+        request.input('description', description || '');
+        request.input('cooking_time', cooking_time);
+        request.input('difficulty', difficulty);
+        request.input('cuisine_type', cuisine_type);
+        request.input('instructions', instructions);
+        request.input('created_by', created_by);
+
+        const result = await request.query(insertQuery);
         const newRecipeId = result.recordset[0].recipe_id;
 
         res.status(201).json({
             status: 'success',
             message: 'Recipe created successfully',
-            recipeId: newRecipeId
+            recipe_id: newRecipeId
+        });
+    } catch (err) {
+        console.error('Error in POST /recipes:', err);
+        res.status(500).json({status: 'error', message: 'Server Error', details: err.message});
+    }
+});
+
+
+router.post('/pending', async (req, res) => {
+    try {
+        const pool = req.pool;
+        const {title, description, instructions, cooking_time, difficulty, cuisine_type, created_by = 1} = req.body;
+
+        // Using parameterized query to prevent SQL injection and handle string escaping properly
+        const insertQuery = `
+            INSERT INTO Recipes (title, description, cooking_time, difficulty, cuisine_type, instructions, created_by,
+                                 created_at, updated_at)
+            VALUES (@title, @description, @cooking_time, @difficulty, @cuisine_type, @instructions, @created_by,
+                    GETDATE(), GETDATE());
+            SELECT SCOPE_IDENTITY() AS recipe_id;
+        `;
+
+        const request = pool.request();
+        request.input('title', title);
+        request.input('description', description || '');
+        request.input('cooking_time', cooking_time);
+        request.input('difficulty', difficulty);
+        request.input('cuisine_type', cuisine_type);
+        request.input('instructions', instructions);
+        request.input('created_by', created_by);
+
+        const result = await request.query(insertQuery);
+        const newRecipeId = result.recordset[0].recipe_id;
+
+        res.status(201).json({
+            status: 'success',
+            message: 'Recipe created successfully',
+            recipe_id: newRecipeId
         });
     } catch (err) {
         console.error('Error in POST /recipes:', err);
@@ -131,21 +193,31 @@ router.put('/:id', async (req, res) => {
     try {
         const pool = req.pool;
         const recipeId = parseInt(req.params.id);
-        const {title, description, instructions, cooking_time, difficulty, cuisine_type} = req.body; // Adjusted to match schema
+        const {title, description, instructions, cooking_time, difficulty, cuisine_type} = req.body;
 
+        // Using parameterized query
         const updateQuery = `
             UPDATE Recipes
-            SET title        = '${title}',
-                description  = '${description}',
-                instructions = '${instructions}',
-                cooking_time = ${cooking_time},
-                difficulty   = '${difficulty}',
-                cuisine_type = '${cuisine_type}',
+            SET title        = @title,
+                description  = @description,
+                instructions = @instructions,
+                cooking_time = @cooking_time,
+                difficulty   = @difficulty,
+                cuisine_type = @cuisine_type,
                 updated_at   = GETDATE()
-            WHERE recipe_id = ${recipeId};
+            WHERE recipe_id = @recipeId;
         `;
 
-        const result = await pool.request().query(updateQuery);
+        const request = pool.request();
+        request.input('title', title);
+        request.input('description', description || '');
+        request.input('instructions', instructions);
+        request.input('cooking_time', cooking_time);
+        request.input('difficulty', difficulty);
+        request.input('cuisine_type', cuisine_type);
+        request.input('recipeId', recipeId);
+
+        const result = await request.query(updateQuery);
 
         if (result.rowsAffected[0] === 0) {
             return res.status(404).json({status: 'error', message: 'Recipe not found'});
@@ -167,26 +239,29 @@ router.delete('/:id', async (req, res) => {
         const pool = req.pool;
         const recipeId = parseInt(req.params.id);
 
+        // Using parameterized queries for all delete operations
+        const request = pool.request();
+        request.input('recipeId', recipeId);
+
         // First delete from related tables to maintain referential integrity
-        await pool.request().query(`DELETE
-                                    FROM RecipeIngredients
-                                    WHERE recipe_id = ${recipeId}`);
-        await pool.request().query(`DELETE
-                                    FROM RecipeSteps
-                                    WHERE recipe_id = ${recipeId}`);
-        await pool.request().query(`DELETE
-                                    FROM Reviews
-                                    WHERE recipe_id = ${recipeId}`);
-        await pool.request().query(`DELETE
-                                    FROM SavedRecipes
-                                    WHERE recipe_id = ${recipeId}`);
+        await request.query(`DELETE
+                             FROM RecipeIngredients
+                             WHERE recipe_id = @recipeId`);
+        await request.query(`DELETE
+                             FROM RecipeSteps
+                             WHERE recipe_id = @recipeId`);
+        await request.query(`DELETE
+                             FROM Reviews
+                             WHERE recipe_id = @recipeId`);
+        await request.query(`DELETE
+                             FROM SavedRecipes
+                             WHERE recipe_id = @recipeId`);
 
-        const deleteQuery = `DELETE
-                             FROM Recipes
-                             WHERE recipe_id = ${recipeId}`;
-        const result = await pool.request().query(deleteQuery);
+        const deleteResult = await request.query(`DELETE
+                                                  FROM Recipes
+                                                  WHERE recipe_id = @recipeId`);
 
-        if (result.rowsAffected[0] === 0) {
+        if (deleteResult.rowsAffected[0] === 0) {
             return res.status(404).json({status: 'error', message: 'Recipe not found'});
         }
 
@@ -205,14 +280,21 @@ router.post('/:id/ingredients', async (req, res) => {
     try {
         const pool = req.pool;
         const recipeId = parseInt(req.params.id);
-        const {ingredient_id, quantity, unit} = req.body; // Adjusted to match schema
+        const {ingredient_id, quantity, unit} = req.body;
 
+        // Using parameterized query
         const insertQuery = `
             INSERT INTO RecipeIngredients (recipe_id, ingredient_id, quantity, unit)
-            VALUES (${recipeId}, ${ingredient_id}, ${quantity}, '${unit}')
+            VALUES (@recipeId, @ingredientId, @quantity, @unit)
         `;
 
-        await pool.request().query(insertQuery);
+        const request = pool.request();
+        request.input('recipeId', recipeId);
+        request.input('ingredientId', ingredient_id);
+        request.input('quantity', quantity);
+        request.input('unit', unit);
+
+        await request.query(insertQuery);
 
         res.status(201).json({
             status: 'success',
@@ -224,20 +306,24 @@ router.post('/:id/ingredients', async (req, res) => {
     }
 });
 
-// Get all ingredients for a recipe (already present and correct)
+// Get all ingredients for a recipe
 router.get('/:id/ingredients', async (req, res) => {
     try {
         const pool = req.pool;
         const recipeId = parseInt(req.params.id);
 
+        // Using parameterized query
         const query = `
             SELECT i.ingredient_id, i.name, ri.quantity, ri.unit
             FROM Ingredients i
                      JOIN RecipeIngredients ri ON i.ingredient_id = ri.ingredient_id
-            WHERE ri.recipe_id = ${recipeId}
+            WHERE ri.recipe_id = @recipeId
         `;
 
-        const result = await pool.request().query(query);
+        const request = pool.request();
+        request.input('recipeId', recipeId);
+        const result = await request.query(query);
+
         res.json(result.recordset);
     } catch (err) {
         console.error('Error in GET /recipes/:id/ingredients:', err);
@@ -245,22 +331,30 @@ router.get('/:id/ingredients', async (req, res) => {
     }
 });
 
-// Update ingredient in recipe (already present and correct)
+// Update ingredient in recipe
 router.put('/:recipeId/ingredients/:ingredientId', async (req, res) => {
     try {
         const pool = req.pool;
-        const {recipeId, ingredientId} = req.params;
+        const recipeId = parseInt(req.params.recipeId);
+        const ingredientId = parseInt(req.params.ingredientId);
         const {quantity, unit} = req.body;
 
+        // Using parameterized query
         const updateQuery = `
             UPDATE RecipeIngredients
-            SET quantity = ${quantity},
-                unit     = '${unit}'
-            WHERE recipe_id = ${recipeId}
-              AND ingredient_id = ${ingredientId}
+            SET quantity = @quantity,
+                unit     = @unit
+            WHERE recipe_id = @recipeId
+              AND ingredient_id = @ingredientId
         `;
 
-        const result = await pool.request().query(updateQuery);
+        const request = pool.request();
+        request.input('quantity', quantity);
+        request.input('unit', unit);
+        request.input('recipeId', recipeId);
+        request.input('ingredientId', ingredientId);
+
+        const result = await request.query(updateQuery);
 
         if (result.rowsAffected[0] === 0) {
             return res.status(404).json({status: 'error', message: 'Ingredient not found in this recipe'});
@@ -276,20 +370,26 @@ router.put('/:recipeId/ingredients/:ingredientId', async (req, res) => {
     }
 });
 
-// Remove ingredient from recipe (already present and correct)
+// Remove ingredient from recipe
 router.delete('/:recipeId/ingredients/:ingredientId', async (req, res) => {
     try {
         const pool = req.pool;
-        const {recipeId, ingredientId} = req.params;
+        const recipeId = parseInt(req.params.recipeId);
+        const ingredientId = parseInt(req.params.ingredientId);
 
+        // Using parameterized query
         const deleteQuery = `
             DELETE
             FROM RecipeIngredients
-            WHERE recipe_id = ${recipeId}
-              AND ingredient_id = ${ingredientId}
+            WHERE recipe_id = @recipeId
+              AND ingredient_id = @ingredientId
         `;
 
-        const result = await pool.request().query(deleteQuery);
+        const request = pool.request();
+        request.input('recipeId', recipeId);
+        request.input('ingredientId', ingredientId);
+
+        const result = await request.query(deleteQuery);
 
         if (result.rowsAffected[0] === 0) {
             return res.status(404).json({status: 'error', message: 'Ingredient not found in this recipe'});
@@ -311,14 +411,18 @@ router.get('/:id/steps', async (req, res) => {
         const pool = req.pool;
         const recipeId = parseInt(req.params.id);
 
+        // Using parameterized query
         const query = `
             SELECT step_number, description
             FROM RecipeSteps
-            WHERE recipe_id = ${recipeId}
+            WHERE recipe_id = @recipeId
             ORDER BY step_number ASC;
         `;
 
-        const result = await pool.request().query(query);
+        const request = pool.request();
+        request.input('recipeId', recipeId);
+        const result = await request.query(query);
+
         res.json(result.recordset);
     } catch (err) {
         console.error(`Error in GET /recipes/${req.params.id}/steps:`, err);
