@@ -1,9 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
-import Header from '../../components/Admin/AdminHeader';
-import RecipeIngredientsManager
-    from '../../components/Users/RecipeIngredientManager.jsx';
-import axios from "axios";
+import axios from 'axios';
+import PendingRecipeIngredientManager from './PendingRecipeIngredientManager';
 
 const api = axios.create({
     baseURL: 'http://localhost:5000/api',
@@ -13,7 +11,7 @@ const api = axios.create({
     }
 });
 
-export default function EditRecipe() {
+export default function PendingRecipeEditPage() {
     const [recipe, setRecipe] = useState({
         title: '',
         description: '',
@@ -22,32 +20,44 @@ export default function EditRecipe() {
         difficulty: '',
         cuisine_type: '',
     });
+    const [originalRecipe, setOriginalRecipe] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [activeTab, setActiveTab] = useState('details');
-    const [createdRecipeId, setCreatedRecipeId] = useState(null);
+    const [pendingRecipeId, setPendingRecipeId] = useState(null);
+    const [message, setMessage] = useState('');
 
-    // Get recipe ID from URL params if editing
+    // Get original recipe ID from URL params if editing existing recipe
     const {id: recipeId} = useParams();
     const navigate = useNavigate();
-    const isEditing = Boolean(recipeId);
-
-    // Use the ID from URL or newly created recipe
-    const currentRecipeId = recipeId || createdRecipeId;
+    const isEditingExisting = Boolean(recipeId);
 
     useEffect(() => {
-        // If we're editing, fetch the recipe data
-        if (isEditing) {
-            fetchRecipe();
+        // If editing existing recipe, fetch its data
+        if (isEditingExisting) {
+            fetchOriginalRecipe();
         }
     }, [recipeId]);
 
-    const fetchRecipe = async () => {
+    const fetchOriginalRecipe = async () => {
         setLoading(true);
         setError(null);
         try {
             const response = await api.get(`/recipes/${recipeId}`);
-            setRecipe(response.data);
+            const recipeData = response.data;
+
+            // Store original recipe data
+            setOriginalRecipe(recipeData);
+
+            // Initialize form with original recipe data
+            setRecipe({
+                title: recipeData.title,
+                description: recipeData.description,
+                instructions: recipeData.instructions,
+                cooking_time: recipeData.cooking_time,
+                difficulty: recipeData.difficulty,
+                cuisine_type: recipeData.cuisine_type,
+            });
         } catch (err) {
             console.error('Error fetching recipe:', err);
             setError(`Failed to load recipe: ${err.response?.data?.message || err.message}`);
@@ -67,27 +77,26 @@ export default function EditRecipe() {
         setError(null);
 
         try {
-            if (isEditing) {
-                // Update existing recipe
-                await api.put(`/recipes/${recipeId}`, recipe);
+            // Create a pending recipe
+            const pendingRecipeData = {
+                ...recipe,
+                original_recipe_id: isEditingExisting ? recipeId : null,
+                status: 'pending',
+                submission_type: isEditingExisting ? 'edit' : 'new'
+            };
 
-                // If on details tab, switch to ingredients tab after saving
-                if (activeTab === 'details') {
-                    setActiveTab('ingredients');
-                }
-            } else {
-                // Create new recipe
-                const response = await api.post('/recipes', recipe);
+            // Using the correct endpoint for pending recipes
+            const response = await api.post('/recipes/pending', pendingRecipeData);
 
-                // Store the newly created recipe ID
-                const newRecipeId = response.data.recipe_id;
-                setCreatedRecipeId(newRecipeId);
+            // Store the pending recipe ID
+            setPendingRecipeId(response.data.recipe_id);  // Updated to recipe_id based on the API response
 
-                // Switch to ingredients tab
-                setActiveTab('ingredients');
-            }
+            setMessage('Recipe details saved! Now you can add ingredients.');
+
+            // Switch to ingredients tab
+            setActiveTab('ingredients');
         } catch (err) {
-            console.error('Error saving recipe:', err);
+            console.error('Error saving pending recipe:', err);
             setError(`Failed to save recipe: ${err.response?.data?.message || err.message}`);
         } finally {
             setLoading(false);
@@ -95,20 +104,39 @@ export default function EditRecipe() {
     };
 
     const handleCancel = () => {
-        navigate('/admin/recipes');
+        navigate('/recipes');
     };
 
-    const handleFinish = () => {
-        navigate('/admin/recipes');
+    const handleFinish = async () => {
+        try {
+            setLoading(true);
+            // Optionally: Update the pending recipe status here if needed
+            setMessage('Your recipe has been submitted for review!');
+            setTimeout(() => {
+                navigate('/recipes');
+            }, 2000);
+        } catch (err) {
+            console.error('Error finalizing submission:', err);
+            setError(`Failed to submit recipe: ${err.response?.data?.message || err.message}`);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <div>
-            <Header/>
-            <main className="container mx-auto py-8">
+        <div className="bg-gray-100 min-h-screen py-8">
+            <main
+                className="max-w-4xl mx-auto bg-white shadow-md rounded-md p-6">
                 <h1 className="text-2xl font-bold mb-6">
-                    {isEditing ? 'Edit Recipe' : 'Add New Recipe'}
+                    {isEditingExisting ? 'Propose Changes to Recipe' : 'Submit New Recipe'}
                 </h1>
+
+                {message && (
+                    <div
+                        className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                        {message}
+                    </div>
+                )}
 
                 {loading && !recipe.title && <p className="mb-4">Loading...</p>}
                 {error && <p className="text-red-600 mb-4">{error}</p>}
@@ -128,11 +156,11 @@ export default function EditRecipe() {
                         </button>
                         <button
                             onClick={() => setActiveTab('ingredients')}
-                            disabled={!currentRecipeId}
+                            disabled={!pendingRecipeId}
                             className={`mr-8 py-4 px-1 border-b-2 font-medium text-sm ${
                                 activeTab === 'ingredients'
                                     ? 'border-blue-500 text-blue-600'
-                                    : !currentRecipeId
+                                    : !pendingRecipeId
                                         ? 'border-transparent text-gray-300 cursor-not-allowed'
                                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                             }`}
@@ -146,6 +174,17 @@ export default function EditRecipe() {
                 {activeTab === 'details' && (
                     <form onSubmit={handleSubmit}
                           className="bg-gray-50 p-6 rounded shadow">
+                        {isEditingExisting && originalRecipe && (
+                            <div
+                                className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                                <p className="text-blue-700 text-sm">
+                                    You are proposing changes to an existing
+                                    recipe. Your changes will be reviewed before
+                                    being published.
+                                </p>
+                            </div>
+                        )}
+
                         <div className="space-y-4">
                             <div
                                 className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -237,7 +276,7 @@ export default function EditRecipe() {
                                     disabled={loading}
                                     className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:bg-green-400"
                                 >
-                                    {loading ? 'Saving...' : isEditing ? 'Update Recipe' : 'Create Recipe'}
+                                    {loading ? 'Saving...' : 'Save Recipe Details'}
                                 </button>
                                 <button
                                     type="button"
@@ -252,16 +291,19 @@ export default function EditRecipe() {
                 )}
 
                 {/* Ingredients Management */}
-                {activeTab === 'ingredients' && currentRecipeId && (
+                {activeTab === 'ingredients' && pendingRecipeId && (
                     <div className="bg-gray-50 p-6 rounded shadow">
-                        <RecipeIngredientsManager recipeId={currentRecipeId}/>
+                        <PendingRecipeIngredientManager
+                            pendingRecipeId={pendingRecipeId}
+                            originalRecipeId={isEditingExisting ? recipeId : null}
+                        />
 
                         <div className="mt-6 pt-4 border-t flex justify-end">
                             <button
                                 onClick={handleFinish}
                                 className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                             >
-                                Finish
+                                Submit Recipe for Review
                             </button>
                         </div>
                     </div>

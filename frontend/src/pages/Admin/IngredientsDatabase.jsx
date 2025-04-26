@@ -179,7 +179,8 @@ export default function IngredientDatabase() {
                             viewBox="0 0 24 24"
                             stroke="currentColor"
                         >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                            <path strokeLinecap="round" strokeLinejoin="round"
+                                  strokeWidth={2}
                                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
                     </div>
@@ -187,7 +188,8 @@ export default function IngredientDatabase() {
 
                 {/* Error message */}
                 {error && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    <div
+                        className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                         <strong>Error:</strong> {error}
                         <button
                             className="float-right"
@@ -207,8 +209,10 @@ export default function IngredientDatabase() {
                     </div>
                 ) : (
                     <>
-                        <div className="overflow-x-auto bg-white rounded-lg shadow">
-                            <table className="min-w-full divide-y divide-gray-200">
+                        <div
+                            className="overflow-x-auto bg-white rounded-lg shadow">
+                            <table
+                                className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                 <tr>
                                     <th scope="col"
@@ -229,10 +233,12 @@ export default function IngredientDatabase() {
                                     </th>
                                 </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
+                                <tbody
+                                    className="bg-white divide-y divide-gray-200">
                                 {filteredIngredients.length > 0 ? (
                                     filteredIngredients.map((ingredient) => (
-                                        <tr key={ingredient.ingredient_id} className="hover:bg-gray-50">
+                                        <tr key={ingredient.ingredient_id}
+                                            className="hover:bg-gray-50">
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {ingredient.ingredient_id}
                                             </td>
@@ -260,7 +266,8 @@ export default function IngredientDatabase() {
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="4" className="px-6 py-4 text-center text-sm text-gray-500">
+                                        <td colSpan="4"
+                                            className="px-6 py-4 text-center text-sm text-gray-500">
                                             No ingredients found
                                         </td>
                                     </tr>
@@ -277,8 +284,10 @@ export default function IngredientDatabase() {
 
                 {/* Add/Edit Modal */}
                 {isModalOpen && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                        <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+                    <div
+                        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                        <div
+                            className="bg-white rounded-lg shadow-xl w-full max-w-md">
                             <div className="p-6">
                                 <h2 className="text-xl font-bold mb-4">
                                     {modalMode === 'add' ? 'Add New Ingredient' : 'Edit Ingredient'}
@@ -286,7 +295,9 @@ export default function IngredientDatabase() {
 
                                 <form onSubmit={handleSubmit}>
                                     <div className="mb-4">
-                                        <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="name">
+                                        <label
+                                            className="block text-gray-700 text-sm font-bold mb-2"
+                                            htmlFor="name">
                                             Ingredient Name
                                         </label>
                                         <input
@@ -302,8 +313,9 @@ export default function IngredientDatabase() {
                                     </div>
 
                                     <div className="mb-4">
-                                        <label className="block text-gray-700 text-sm font-bold mb-2"
-                                               htmlFor="nutritional_info">
+                                        <label
+                                            className="block text-gray-700 text-sm font-bold mb-2"
+                                            htmlFor="nutritional_info">
                                             Nutritional Information (Optional)
                                         </label>
                                         <textarea
@@ -340,11 +352,15 @@ export default function IngredientDatabase() {
 
                 {/* Delete Confirmation Dialog */}
                 {showConfirmation && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                        <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
+                    <div
+                        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                        <div
+                            className="bg-white rounded-lg shadow-xl w-full max-w-md">
                             <div className="p-6">
-                                <h2 className="text-xl font-bold mb-4">Confirm Deletion</h2>
-                                <p className="mb-6">Are you sure you want to delete this ingredient? This action cannot
+                                <h2 className="text-xl font-bold mb-4">Confirm
+                                    Deletion</h2>
+                                <p className="mb-6">Are you sure you want to
+                                    delete this ingredient? This action cannot
                                     be undone.</p>
 
                                 <div className="flex justify-end">

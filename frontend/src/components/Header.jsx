@@ -13,7 +13,8 @@ export default function Header() {
 
     return (
         <header className="bg-orange-500 text-white p-4 shadow-md">
-            <div className="container mx-auto flex justify-between items-center">
+            <div
+                className="container mx-auto flex justify-between items-center">
                 <Link to="/" className="text-2xl font-bold">
                     CookMate
                 </Link>
@@ -33,7 +34,8 @@ export default function Header() {
 
                     {user ? (
                         <>
-                            <span className="ml-4">Hello, {user.username}!</span>
+                            <span
+                                className="ml-4">Hello, {user.username}!</span>
                             <button
                                 onClick={handleLogout}
                                 className="ml-2 bg-white text-orange-500 px-3 py-1 rounded hover:bg-orange-100"

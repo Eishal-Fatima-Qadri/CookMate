@@ -9,9 +9,13 @@ const api = axios.create({
     }
 });
 
-export default function RecipeIngredientsManager({recipeId}) {
-    const [ingredients, setIngredients] = useState([]);
+export default function PendingRecipeIngredientManager({
+                                                           pendingRecipeId,
+                                                           originalRecipeId
+                                                       }) {
+    const [pendingIngredients, setPendingIngredients] = useState([]);
     const [availableIngredients, setAvailableIngredients] = useState([]);
+    const [originalIngredients, setOriginalIngredients] = useState([]);
     const [newIngredient, setNewIngredient] = useState({
         ingredient_id: '',
         quantity: '',
@@ -22,24 +26,39 @@ export default function RecipeIngredientsManager({recipeId}) {
     const [isAddMode, setIsAddMode] = useState(false);
     const [editIndex, setEditIndex] = useState(null);
 
-    // Fetch recipe ingredients and all available ingredients
+    // Fetch pending recipe ingredients, all available ingredients, and original ingredients if editing
     useEffect(() => {
-        if (recipeId) {
-            fetchRecipeIngredients();
+        if (pendingRecipeId) {
+            fetchPendingIngredients();
             fetchAllIngredients();
-        }
-    }, [recipeId]);
 
-    const fetchRecipeIngredients = async () => {
+            // If we're editing an existing recipe, get its original ingredients
+            if (originalRecipeId) {
+                fetchOriginalIngredients();
+            }
+        }
+    }, [pendingRecipeId, originalRecipeId]);
+
+    const fetchPendingIngredients = async () => {
         setLoading(true);
         try {
-            const response = await api.get(`/recipes/${recipeId}/ingredients`);
-            setIngredients(response.data);
+            // Updated route to use the correct endpoint
+            const response = await api.get(`/recipes/${pendingRecipeId}/pending-ingredients`);
+            setPendingIngredients(response.data);
         } catch (err) {
-            console.error('Error fetching recipe ingredients:', err);
-            setError('Failed to load ingredients');
+            console.error('Error fetching pending ingredients:', err);
+            setError('Failed to load pending ingredients');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchOriginalIngredients = async () => {
+        try {
+            const response = await api.get(`/recipes/${originalRecipeId}/ingredients`);
+            setOriginalIngredients(response.data);
+        } catch (err) {
+            console.error('Error fetching original ingredients:', err);
         }
     };
 
@@ -49,6 +68,28 @@ export default function RecipeIngredientsManager({recipeId}) {
             setAvailableIngredients(response.data);
         } catch (err) {
             console.error('Error fetching all ingredients:', err);
+        }
+    };
+
+    const importOriginalIngredients = async () => {
+        setLoading(true);
+        try {
+            // Create pending ingredients based on original recipe ingredients
+            for (const ingredient of originalIngredients) {
+                // Updated route to use the correct endpoint
+                await api.post(`/recipes/${pendingRecipeId}/pending-ingredients`, {
+                    ingredient_id: ingredient.ingredient_id,
+                    quantity: ingredient.quantity,
+                    unit: ingredient.unit
+                });
+            }
+            // Refresh the pending ingredients list
+            await fetchPendingIngredients();
+        } catch (err) {
+            console.error('Error importing original ingredients:', err);
+            setError('Failed to import original ingredients');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -66,9 +107,10 @@ export default function RecipeIngredientsManager({recipeId}) {
         setError(null);
 
         try {
-            await api.post(`/recipes/${recipeId}/ingredients`, newIngredient);
+            // Updated route to use the correct endpoint
+            await api.post(`/recipes/${pendingRecipeId}/pending-ingredients`, newIngredient);
             // Refresh ingredients list
-            await fetchRecipeIngredients();
+            await fetchPendingIngredients();
             // Reset form
             setNewIngredient({
                 ingredient_id: '',
@@ -100,13 +142,14 @@ export default function RecipeIngredientsManager({recipeId}) {
         setError(null);
 
         try {
-            await api.put(`/recipes/${recipeId}/ingredients/${newIngredient.ingredient_id}`, {
+            // Updated route to use the correct endpoint
+            await api.put(`/recipes/${pendingRecipeId}/pending-ingredients/${newIngredient.ingredient_id}`, {
                 quantity: newIngredient.quantity,
                 unit: newIngredient.unit
             });
 
             // Refresh ingredients list
-            await fetchRecipeIngredients();
+            await fetchPendingIngredients();
             // Reset form
             setNewIngredient({
                 ingredient_id: '',
@@ -131,9 +174,10 @@ export default function RecipeIngredientsManager({recipeId}) {
         setError(null);
 
         try {
-            await api.delete(`/recipes/${recipeId}/ingredients/${ingredientId}`);
+            // Updated route to use the correct endpoint
+            await api.delete(`/recipes/${pendingRecipeId}/pending-ingredients/${ingredientId}`);
             // Refresh ingredients list
-            await fetchRecipeIngredients();
+            await fetchPendingIngredients();
         } catch (err) {
             console.error('Error deleting ingredient:', err);
             setError(`Failed to delete ingredient: ${err.response?.data?.message || err.message}`);
@@ -153,10 +197,22 @@ export default function RecipeIngredientsManager({recipeId}) {
     };
 
     return (
-        <div className="mt-8">
+        <div className="mt-4">
             <h2 className="text-xl font-bold mb-4">Recipe Ingredients</h2>
 
             {error && <p className="text-red-600 mb-4">{error}</p>}
+
+            {/* Import option when editing an existing recipe */}
+            {originalRecipeId && originalIngredients.length > 0 && pendingIngredients.length === 0 && (
+                <div className="mb-4">
+                    <button
+                        onClick={importOriginalIngredients}
+                        className="bg-blue-100 text-blue-700 border border-blue-300 px-4 py-2 rounded hover:bg-blue-200"
+                    >
+                        Import Ingredients from Original Recipe
+                    </button>
+                </div>
+            )}
 
             <div className="mb-4">
                 <table className="min-w-full bg-white border shadow-sm">
@@ -169,7 +225,7 @@ export default function RecipeIngredientsManager({recipeId}) {
                     </tr>
                     </thead>
                     <tbody>
-                    {ingredients.length === 0 ? (
+                    {pendingIngredients.length === 0 ? (
                         <tr>
                             <td colSpan="4"
                                 className="py-4 px-4 text-center text-gray-500">
@@ -177,7 +233,7 @@ export default function RecipeIngredientsManager({recipeId}) {
                             </td>
                         </tr>
                     ) : (
-                        ingredients.map((ingredient, index) => (
+                        pendingIngredients.map((ingredient, index) => (
                             <tr key={`${ingredient.ingredient_id}-${index}`}
                                 className="border-b hover:bg-gray-50">
                                 <td className="py-2 px-4">{ingredient.name}</td>
@@ -230,7 +286,7 @@ export default function RecipeIngredientsManager({recipeId}) {
                             {editIndex !== null ? (
                                 <input
                                     type="text"
-                                    value={ingredients[editIndex]?.name || ''}
+                                    value={pendingIngredients[editIndex]?.name || ''}
                                     disabled
                                     className="border rounded px-3 py-2 w-full bg-gray-100"
                                 />

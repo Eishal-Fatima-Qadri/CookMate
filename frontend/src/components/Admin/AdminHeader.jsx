@@ -13,7 +13,8 @@ export default function AdminHeader() {
 
     return (
         <header className="bg-indigo-800 text-white p-4 shadow-md">
-            <div className="container mx-auto flex justify-between items-center">
+            <div
+                className="container mx-auto flex justify-between items-center">
                 <Link to="/admin/dashboard" className="text-2xl font-bold">
                     CookMate Admin
                 </Link>
@@ -36,7 +37,8 @@ export default function AdminHeader() {
 
                     {user ? (
                         <>
-                            <span className="ml-4">Welcome {user.username}</span>
+                            <span
+                                className="ml-4">Welcome {user.username}</span>
                             <button
                                 onClick={handleLogout}
                                 className="ml-2 bg-white text-indigo-800 px-3 py-1 rounded hover:bg-indigo-100"

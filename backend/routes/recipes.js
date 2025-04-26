@@ -21,7 +21,11 @@ router.get('/', async (req, res) => {
         res.json(result.recordset);
     } catch (err) {
         console.error('Error in GET /recipes:', err);
-        res.status(500).json({status: 'error', message: 'Server Error', details: err.message});
+        res.status(500).json({
+            status: 'error',
+            message: 'Server Error',
+            details: err.message
+        });
     }
 });
 
@@ -74,7 +78,10 @@ router.get('/:id', async (req, res) => {
         const recipeResult = await request.query(recipeQuery);
 
         if (recipeResult.recordset.length === 0) {
-            return res.status(404).json({status: 'error', message: 'Recipe not found'});
+            return res.status(404).json({
+                status: 'error',
+                message: 'Recipe not found'
+            });
         }
 
         const recipe = recipeResult.recordset[0];
@@ -97,7 +104,7 @@ router.get('/:id', async (req, res) => {
             SELECT step_number, description
             FROM RecipeSteps
             WHERE recipe_id = @recipeId
-            ORDER BY step_number ASC;
+            ORDER BY step_number;
         `;
 
         const stepsRequest = pool.request();
@@ -108,7 +115,11 @@ router.get('/:id', async (req, res) => {
         res.json(recipe);
     } catch (err) {
         console.error('Error in GET /recipes/:id:', err);
-        res.status(500).json({status: 'error', message: 'Server Error', details: err.message});
+        res.status(500).json({
+            status: 'error',
+            message: 'Server Error',
+            details: err.message
+        });
     }
 });
 
@@ -116,13 +127,23 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         const pool = req.pool;
-        const {title, description, instructions, cooking_time, difficulty, cuisine_type, created_by = 1} = req.body;
+        const {
+            title,
+            description,
+            instructions,
+            cooking_time,
+            difficulty,
+            cuisine_type,
+            created_by = 1
+        } = req.body;
 
         // Using parameterized query to prevent SQL injection and handle string escaping properly
         const insertQuery = `
-            INSERT INTO Recipes (title, description, cooking_time, difficulty, cuisine_type, instructions, created_by,
+            INSERT INTO Recipes (title, description, cooking_time, difficulty,
+                                 cuisine_type, instructions, created_by,
                                  created_at, updated_at)
-            VALUES (@title, @description, @cooking_time, @difficulty, @cuisine_type, @instructions, @created_by,
+            VALUES (@title, @description, @cooking_time, @difficulty,
+                    @cuisine_type, @instructions, @created_by,
                     GETDATE(), GETDATE());
             SELECT SCOPE_IDENTITY() AS recipe_id;
         `;
@@ -146,21 +167,34 @@ router.post('/', async (req, res) => {
         });
     } catch (err) {
         console.error('Error in POST /recipes:', err);
-        res.status(500).json({status: 'error', message: 'Server Error', details: err.message});
+        res.status(500).json({
+            status: 'error',
+            message: 'Server Error',
+            details: err.message
+        });
     }
 });
-
 
 router.post('/pending', async (req, res) => {
     try {
         const pool = req.pool;
-        const {title, description, instructions, cooking_time, difficulty, cuisine_type, created_by = 1} = req.body;
+        const {
+            title,
+            description,
+            instructions,
+            cooking_time,
+            difficulty,
+            cuisine_type,
+            created_by = 1
+        } = req.body;
 
-        // Using parameterized query to prevent SQL injection and handle string escaping properly
+        // Using a parameterized query to prevent SQL injection and handle string escaping properly
         const insertQuery = `
-            INSERT INTO Recipes (title, description, cooking_time, difficulty, cuisine_type, instructions, created_by,
+            INSERT INTO PendingRecipes (title, description, cooking_time, difficulty,
+                                 cuisine_type, instructions, created_by,
                                  created_at, updated_at)
-            VALUES (@title, @description, @cooking_time, @difficulty, @cuisine_type, @instructions, @created_by,
+            VALUES (@title, @description, @cooking_time, @difficulty,
+                    @cuisine_type, @instructions, @created_by,
                     GETDATE(), GETDATE());
             SELECT SCOPE_IDENTITY() AS recipe_id;
         `;
@@ -184,7 +218,11 @@ router.post('/pending', async (req, res) => {
         });
     } catch (err) {
         console.error('Error in POST /recipes:', err);
-        res.status(500).json({status: 'error', message: 'Server Error', details: err.message});
+        res.status(500).json({
+            status: 'error',
+            message: 'Server Error',
+            details: err.message
+        });
     }
 });
 
@@ -193,7 +231,14 @@ router.put('/:id', async (req, res) => {
     try {
         const pool = req.pool;
         const recipeId = parseInt(req.params.id);
-        const {title, description, instructions, cooking_time, difficulty, cuisine_type} = req.body;
+        const {
+            title,
+            description,
+            instructions,
+            cooking_time,
+            difficulty,
+            cuisine_type
+        } = req.body;
 
         // Using parameterized query
         const updateQuery = `
@@ -220,16 +265,22 @@ router.put('/:id', async (req, res) => {
         const result = await request.query(updateQuery);
 
         if (result.rowsAffected[0] === 0) {
-            return res.status(404).json({status: 'error', message: 'Recipe not found'});
+            return res.status(404).json({
+                status: 'error',
+                message: 'Recipe not found'
+            });
         }
 
         res.json({
-            status: 'success',
-            message: 'Recipe updated successfully'
+            status: 'success', message: 'Recipe updated successfully'
         });
     } catch (err) {
         console.error('Error in PUT /recipes/:id:', err);
-        res.status(500).json({status: 'error', message: 'Server Error', details: err.message});
+        res.status(500).json({
+            status: 'error',
+            message: 'Server Error',
+            details: err.message
+        });
     }
 });
 
@@ -262,16 +313,22 @@ router.delete('/:id', async (req, res) => {
                                                   WHERE recipe_id = @recipeId`);
 
         if (deleteResult.rowsAffected[0] === 0) {
-            return res.status(404).json({status: 'error', message: 'Recipe not found'});
+            return res.status(404).json({
+                status: 'error',
+                message: 'Recipe not found'
+            });
         }
 
         res.json({
-            status: 'success',
-            message: 'Recipe deleted successfully'
+            status: 'success', message: 'Recipe deleted successfully'
         });
     } catch (err) {
         console.error('Error in DELETE /recipes/:id:', err);
-        res.status(500).json({status: 'error', message: 'Server Error', details: err.message});
+        res.status(500).json({
+            status: 'error',
+            message: 'Server Error',
+            details: err.message
+        });
     }
 });
 
@@ -302,7 +359,11 @@ router.post('/:id/ingredients', async (req, res) => {
         });
     } catch (err) {
         console.error('Error in POST /recipes/:id/ingredients:', err);
-        res.status(500).json({status: 'error', message: 'Server Error', details: err.message});
+        res.status(500).json({
+            status: 'error',
+            message: 'Server Error',
+            details: err.message
+        });
     }
 });
 
@@ -327,7 +388,46 @@ router.get('/:id/ingredients', async (req, res) => {
         res.json(result.recordset);
     } catch (err) {
         console.error('Error in GET /recipes/:id/ingredients:', err);
-        res.status(500).json({status: 'error', message: 'Server Error', details: err.message});
+        res.status(500).json({
+            status: 'error',
+            message: 'Server Error',
+            details: err.message
+        });
+    }
+});
+
+// Add pending ingredient to recipe
+router.post('/:id/pending-ingredients', async (req, res) => {
+    try {
+        const pool = req.pool;
+        const recipeId = parseInt(req.params.id);
+        const {ingredient_id, quantity, unit} = req.body;
+
+        // Using parameterized query
+        const insertQuery = `
+            INSERT INTO PendingRecipeIngredients (recipe_id, ingredient_id, quantity, unit)
+            VALUES (@recipeId, @ingredientId, @quantity, @unit)
+        `;
+
+        const request = pool.request();
+        request.input('recipeId', recipeId);
+        request.input('ingredientId', ingredient_id);
+        request.input('quantity', quantity);
+        request.input('unit', unit);
+
+        await request.query(insertQuery);
+
+        res.status(201).json({
+            status: 'success',
+            message: 'Ingredient added to pending recipe successfully'
+        });
+    } catch (err) {
+        console.error('Error in POST /recipes/:id/pending-ingredients:', err);
+        res.status(500).json({
+            status: 'error',
+            message: 'Server Error',
+            details: err.message
+        });
     }
 });
 
@@ -357,16 +457,22 @@ router.put('/:recipeId/ingredients/:ingredientId', async (req, res) => {
         const result = await request.query(updateQuery);
 
         if (result.rowsAffected[0] === 0) {
-            return res.status(404).json({status: 'error', message: 'Ingredient not found in this recipe'});
+            return res.status(404).json({
+                status: 'error',
+                message: 'Ingredient not found in this recipe'
+            });
         }
 
         res.json({
-            status: 'success',
-            message: 'Recipe ingredient updated successfully'
+            status: 'success', message: 'Recipe ingredient updated successfully'
         });
     } catch (err) {
         console.error('Error in PUT /recipes/:recipeId/ingredients/:ingredientId:', err);
-        res.status(500).json({status: 'error', message: 'Server Error', details: err.message});
+        res.status(500).json({
+            status: 'error',
+            message: 'Server Error',
+            details: err.message
+        });
     }
 });
 
@@ -392,7 +498,10 @@ router.delete('/:recipeId/ingredients/:ingredientId', async (req, res) => {
         const result = await request.query(deleteQuery);
 
         if (result.rowsAffected[0] === 0) {
-            return res.status(404).json({status: 'error', message: 'Ingredient not found in this recipe'});
+            return res.status(404).json({
+                status: 'error',
+                message: 'Ingredient not found in this recipe'
+            });
         }
 
         res.json({
@@ -401,7 +510,11 @@ router.delete('/:recipeId/ingredients/:ingredientId', async (req, res) => {
         });
     } catch (err) {
         console.error('Error in DELETE /recipes/:recipeId/ingredients/:ingredientId:', err);
-        res.status(500).json({status: 'error', message: 'Server Error', details: err.message});
+        res.status(500).json({
+            status: 'error',
+            message: 'Server Error',
+            details: err.message
+        });
     }
 });
 
@@ -416,7 +529,7 @@ router.get('/:id/steps', async (req, res) => {
             SELECT step_number, description
             FROM RecipeSteps
             WHERE recipe_id = @recipeId
-            ORDER BY step_number ASC;
+            ORDER BY step_number;
         `;
 
         const request = pool.request();
@@ -426,7 +539,102 @@ router.get('/:id/steps', async (req, res) => {
         res.json(result.recordset);
     } catch (err) {
         console.error(`Error in GET /recipes/${req.params.id}/steps:`, err);
-        res.status(500).json({status: 'error', message: 'Server Error', details: err.message});
+        res.status(500).json({
+            status: 'error',
+            message: 'Server Error',
+            details: err.message
+        });
+    }
+});
+
+// Get all pending ingredients for a recipe
+router.get('/:id/pending-ingredients', async (req, res) => {
+    try {
+        const pool = req.pool;
+        const recipeId = parseInt(req.params.id);
+        const query = `
+      SELECT i.ingredient_id, i.name, pri.quantity, pri.unit
+      FROM Ingredients i
+           JOIN PendingRecipeIngredients pri
+             ON i.ingredient_id = pri.ingredient_id
+      WHERE pri.recipe_id = @recipeId
+    `;
+        const request = pool.request();
+        request.input('recipeId', recipeId);
+        const result = await request.query(query);
+        res.json(result.recordset);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({status:'error',message:'Server Error',details:err.message});
+    }
+});
+
+// Update a pending ingredient
+router.patch('/:id/pending-ingredients/:ingredientId', async (req, res) => {
+    const pool = req.pool;
+    const recipeId     = parseInt(req.params.id, 10);
+    const ingredientId = parseInt(req.params.ingredientId, 10);
+    const allowed      = ['quantity', 'unit'];
+    const updates      = [];
+    const request      = pool.request();
+
+    request.input('recipeId', recipeId);
+    request.input('ingredientId', ingredientId);
+
+    for (const key of allowed) {
+        if (req.body[key] !== undefined) {
+            updates.push(`${key} = @${key}`);
+            request.input(key, req.body[key]);
+        }
+    }
+
+    if (updates.length === 0) {
+        return res.status(400).json({ status: 'error', message: 'No valid fields provided for update' });
+    }
+
+    const sql = `
+    UPDATE PendingRecipeIngredients
+       SET ${updates.join(', ')}
+     WHERE recipe_id     = @recipeId
+       AND ingredient_id = @ingredientId
+  `;
+
+    try {
+        const result = await request.query(sql);
+        if (result.rowsAffected[0] === 0) {
+            return res.status(404).json({ status: 'error', message: 'Pending ingredient not found' });
+        }
+        res.json({ status: 'success', message: 'Pending ingredient updated successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ status: 'error', message: 'Server Error', details: err.message });
+    }
+});
+
+// Delete a pending ingredient
+router.delete('/:id/pending-ingredients/:ingredientId', async (req, res) => {
+    try {
+        const pool = req.pool;
+        const recipeId     = parseInt(req.params.id);
+        const ingredientId = parseInt(req.params.ingredientId);
+
+        const deleteQuery = `
+      DELETE FROM PendingRecipeIngredients
+      WHERE recipe_id     = @recipeId
+        AND ingredient_id = @ingredientId
+    `;
+        const request = pool.request();
+        request.input('recipeId', recipeId);
+        request.input('ingredientId', ingredientId);
+
+        const result = await request.query(deleteQuery);
+        if (result.rowsAffected[0] === 0) {
+            return res.status(404).json({status:'error',message:'Pending ingredient not found'});
+        }
+        res.json({status:'success',message:'Pending ingredient removed'});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({status:'error',message:'Server Error',details:err.message});
     }
 });
 

@@ -84,21 +84,24 @@ export default function Register() {
     };
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-yellow-50 py-8">
+        <div
+            className="flex justify-center items-center min-h-screen bg-yellow-50 py-8">
             <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
                 <h2 className="text-2xl font-bold text-orange-600 mb-6 text-center">
                     Create an Account
                 </h2>
 
                 {error && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    <div
+                        className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                         {error}
                     </div>
                 )}
 
                 <form className="space-y-4" onSubmit={handleSubmit}>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            className="block text-sm font-medium text-gray-700 mb-1">
                             Username*
                         </label>
                         <input
@@ -112,7 +115,8 @@ export default function Register() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            className="block text-sm font-medium text-gray-700 mb-1">
                             Email*
                         </label>
                         <input
@@ -126,7 +130,8 @@ export default function Register() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            className="block text-sm font-medium text-gray-700 mb-1">
                             Password*
                         </label>
                         <input
@@ -140,7 +145,8 @@ export default function Register() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            className="block text-sm font-medium text-gray-700 mb-1">
                             Confirm Password*
                         </label>
                         <input
@@ -154,7 +160,8 @@ export default function Register() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            className="block text-sm font-medium text-gray-700 mb-1">
                             Dietary Preferences
                         </label>
                         <input
@@ -168,7 +175,8 @@ export default function Register() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            className="block text-sm font-medium text-gray-700 mb-1">
                             Allergens
                         </label>
                         <input
@@ -182,7 +190,8 @@ export default function Register() {
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label
+                            className="block text-sm font-medium text-gray-700 mb-1">
                             Favorite Cuisines
                         </label>
                         <input
@@ -205,7 +214,8 @@ export default function Register() {
                 </form>
                 <p className="mt-4 text-center text-sm text-gray-600">
                     Already have an account?{" "}
-                    <a href="/login" className="text-orange-500 hover:underline">
+                    <a href="/login"
+                       className="text-orange-500 hover:underline">
                         Login
                     </a>
                 </p>

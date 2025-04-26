@@ -10,8 +10,10 @@ export default function Home() {
                 Welcome to CookMate!
             </h1>
             <p className="text-xl text-gray-700 mb-8">
-                Discover delicious recipes based on the ingredients you already have.
-                CookMate helps you manage your pantry, track your meals, and explore new
+                Discover delicious recipes based on the ingredients you already
+                have.
+                CookMate helps you manage your pantry, track your meals, and
+                explore new
                 culinary creations.
             </p>
 
@@ -38,15 +40,18 @@ export default function Home() {
 
             {/* Feature Cards */}
             <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-orange-300">
+                <div
+                    className="bg-white p-6 rounded-xl shadow-md border-t-4 border-orange-300">
                     <h3 className="text-lg font-semibold text-orange-600 mb-2">
                         Smart Pantry
                     </h3>
                     <p className="text-gray-600">
-                        Keep track of ingredients and their expiration dates with ease.
+                        Keep track of ingredients and their expiration dates
+                        with ease.
                     </p>
                 </div>
-                <div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-yellow-300">
+                <div
+                    className="bg-white p-6 rounded-xl shadow-md border-t-4 border-yellow-300">
                     <h3 className="text-lg font-semibold text-yellow-600 mb-2">
                         Recipe Suggestions
                     </h3>
@@ -54,12 +59,14 @@ export default function Home() {
                         Get recipe ideas tailored to what's in your kitchen.
                     </p>
                 </div>
-                <div className="bg-white p-6 rounded-xl shadow-md border-t-4 border-green-300">
+                <div
+                    className="bg-white p-6 rounded-xl shadow-md border-t-4 border-green-300">
                     <h3 className="text-lg font-semibold text-green-600 mb-2">
                         Nutrition Insights
                     </h3>
                     <p className="text-gray-600">
-                        Track your meals and stay aligned with your health goals.
+                        Track your meals and stay aligned with your health
+                        goals.
                     </p>
                 </div>
             </div>

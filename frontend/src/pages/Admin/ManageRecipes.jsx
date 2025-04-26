@@ -114,7 +114,8 @@ export default function ManageRecipes() {
 
                 {loading && <p className="mb-4">Loading...</p>}
                 {error && <p className="text-red-600 mb-4">{error}</p>}
-                {debugInfo && <pre className="bg-gray-100 p-2 rounded text-sm mb-4">{debugInfo}</pre>}
+                {debugInfo && <pre
+                    className="bg-gray-100 p-2 rounded text-sm mb-4">{debugInfo}</pre>}
 
                 {/* Recipe List */}
                 <div className="overflow-x-auto">
@@ -131,7 +132,8 @@ export default function ManageRecipes() {
                         <tbody>
                         {recipes.length > 0 ? (
                             recipes.map(recipe => (
-                                <tr key={recipe.recipe_id} className="border-t hover:bg-gray-50">
+                                <tr key={recipe.recipe_id}
+                                    className="border-t hover:bg-gray-50">
                                     <td className="px-4 py-2">{recipe.title}</td>
                                     <td className="px-4 py-2">{recipe.cuisine_type}</td>
                                     <td className="px-4 py-2">{recipe.cooking_time}</td>
@@ -154,7 +156,8 @@ export default function ManageRecipes() {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="5" className="px-4 py-4 text-center text-gray-500">
+                                <td colSpan="5"
+                                    className="px-4 py-4 text-center text-gray-500">
                                     {loading ? 'Loading recipes...' : 'No recipes found'}
                                 </td>
                             </tr>

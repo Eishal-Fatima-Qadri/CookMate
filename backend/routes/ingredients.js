@@ -4,7 +4,10 @@ const router = express.Router();
 // Test endpoint to verify API connectivity
 router.get('/test', async (req, res) => {
     try {
-        res.json({status: 'success', message: 'Ingredients API is working correctly'});
+        res.json({
+            status: 'success',
+            message: 'Ingredients API is working correctly'
+        });
     } catch (err) {
         console.error(err);
         res.status(500).json({status: 'error', message: 'Server Error'});
@@ -20,7 +23,11 @@ router.get('/', async (req, res) => {
         res.json(result.recordset);
     } catch (err) {
         console.error('Error in GET /ingredients:', err);
-        res.status(500).json({status: 'error', message: 'Server Error', details: err.message});
+        res.status(500).json({
+            status: 'error',
+            message: 'Server Error',
+            details: err.message
+        });
     }
 });
 
@@ -38,13 +45,20 @@ router.get('/:id', async (req, res) => {
         const result = await pool.request().query(query);
 
         if (result.recordset.length === 0) {
-            return res.status(404).json({status: 'error', message: 'Ingredient not found'});
+            return res.status(404).json({
+                status: 'error',
+                message: 'Ingredient not found'
+            });
         }
 
         res.json(result.recordset[0]);
     } catch (err) {
         console.error('Error in GET /ingredients/:id:', err);
-        res.status(500).json({status: 'error', message: 'Server Error', details: err.message});
+        res.status(500).json({
+            status: 'error',
+            message: 'Server Error',
+            details: err.message
+        });
     }
 });
 
@@ -70,7 +84,11 @@ router.post('/', async (req, res) => {
         });
     } catch (err) {
         console.error('Error in POST /ingredients:', err);
-        res.status(500).json({status: 'error', message: 'Server Error', details: err.message});
+        res.status(500).json({
+            status: 'error',
+            message: 'Server Error',
+            details: err.message
+        });
     }
 });
 
@@ -83,7 +101,7 @@ router.put('/:id', async (req, res) => {
 
         const updateQuery = `
             UPDATE Ingredients
-            SET name             = '${name}',
+            SET name = '${name}',
                 nutritional_info = '${nutritional_info || ''}'
             WHERE ingredient_id = ${ingredientId};
         `;
@@ -91,7 +109,10 @@ router.put('/:id', async (req, res) => {
         const result = await pool.request().query(updateQuery);
 
         if (result.rowsAffected[0] === 0) {
-            return res.status(404).json({status: 'error', message: 'Ingredient not found'});
+            return res.status(404).json({
+                status: 'error',
+                message: 'Ingredient not found'
+            });
         }
 
         res.json({
@@ -100,7 +121,11 @@ router.put('/:id', async (req, res) => {
         });
     } catch (err) {
         console.error('Error in PUT /ingredients/:id:', err);
-        res.status(500).json({status: 'error', message: 'Server Error', details: err.message});
+        res.status(500).json({
+            status: 'error',
+            message: 'Server Error',
+            details: err.message
+        });
     }
 });
 
@@ -149,7 +174,10 @@ router.delete('/:id', async (req, res) => {
         const result = await pool.request().query(deleteQuery);
 
         if (result.rowsAffected[0] === 0) {
-            return res.status(404).json({status: 'error', message: 'Ingredient not found'});
+            return res.status(404).json({
+                status: 'error',
+                message: 'Ingredient not found'
+            });
         }
 
         res.json({
@@ -158,7 +186,11 @@ router.delete('/:id', async (req, res) => {
         });
     } catch (err) {
         console.error('Error in DELETE /ingredients/:id:', err);
-        res.status(500).json({status: 'error', message: 'Server Error', details: err.message});
+        res.status(500).json({
+            status: 'error',
+            message: 'Server Error',
+            details: err.message
+        });
     }
 });
 
@@ -179,7 +211,11 @@ router.get('/search/:query', async (req, res) => {
         res.json(result.recordset);
     } catch (err) {
         console.error('Error in GET /ingredients/search/:query:', err);
-        res.status(500).json({status: 'error', message: 'Server Error', details: err.message});
+        res.status(500).json({
+            status: 'error',
+            message: 'Server Error',
+            details: err.message
+        });
     }
 });
 

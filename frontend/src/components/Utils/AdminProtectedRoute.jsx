@@ -14,7 +14,8 @@ const AdminProtectedRoute = ({children}) => {
     if (loading) {
         return (
             <div className="flex justify-center items-center h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+                <div
+                    className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
             </div>
         );
     }
@@ -31,8 +32,10 @@ const AdminProtectedRoute = ({children}) => {
         console.log("User is not an admin:", user);
         return (
             <div className="mt-20 p-4 text-center">
-                <h2 className="text-red-500 text-xl font-bold">Unauthorized Access</h2>
-                <p className="mt-2">You do not have permission to access this page.</p>
+                <h2 className="text-red-500 text-xl font-bold">Unauthorized
+                    Access</h2>
+                <p className="mt-2">You do not have permission to access this
+                    page.</p>
                 <p className="mt-2 text-sm text-gray-500">
                     Current role: {user.role || 'No role defined'}
                 </p>

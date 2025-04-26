@@ -46,26 +46,31 @@ const RecipeDetail = () => {
     }, [id]);
 
     if (loading) {
-        return <div className="text-center py-8 text-gray-600">Loading recipe details...</div>;
+        return <div className="text-center py-8 text-gray-600">Loading recipe
+            details...</div>;
     }
 
     if (error) {
-        return <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>;
+        return <div
+            className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>;
     }
 
     if (!recipe) {
-        return <div className="text-center py-8 text-gray-600">Recipe not found.</div>;
+        return <div className="text-center py-8 text-gray-600">Recipe not
+            found.</div>;
     }
 
     return (
         <div className="bg-gray-100 min-h-screen py-8">
-            <main className="max-w-3xl mx-auto bg-white shadow-md rounded-md p-8">
+            <main
+                className="max-w-3xl mx-auto bg-white shadow-md rounded-md p-8">
                 <h1 className="text-3xl font-bold text-gray-800 mb-4">{recipe.title}</h1>
 
                 {/* Space for an image */}
                 <div className="w-full h-48 bg-gray-200 rounded-md mb-6">
                     {/* You can add an image here based on recipe.imageUrl */}
-                    <div className="flex items-center justify-center h-full text-gray-500">
+                    <div
+                        className="flex items-center justify-center h-full text-gray-500">
                         Placeholder for Image
                     </div>
                 </div>
@@ -93,9 +98,11 @@ const RecipeDetail = () => {
                 <div>
                     <h2 className="text-xl font-semibold text-gray-700 mb-2">Instructions</h2>
                     {recipe.instructions ? (
-                        <div className="text-gray-600 leading-relaxed whitespace-pre-line">{recipe.instructions}</div>
+                        <div
+                            className="text-gray-600 leading-relaxed whitespace-pre-line">{recipe.instructions}</div>
                     ) : (
-                        <p className="text-gray-500">No instructions provided.</p>
+                        <p className="text-gray-500">No instructions
+                            provided.</p>
                     )}
                 </div>
 
@@ -113,9 +120,11 @@ const RecipeDetail = () => {
                 )}
 
                 <div className="mt-8 border-t pt-4 text-gray-500 text-sm">
-                    Created At: {new Date(recipe.created_at).toLocaleDateString()}
+                    Created
+                    At: {new Date(recipe.created_at).toLocaleDateString()}
                     <br/>
-                    Last Updated: {new Date(recipe.updated_at).toLocaleDateString()}
+                    Last
+                    Updated: {new Date(recipe.updated_at).toLocaleDateString()}
                 </div>
             </main>
         </div>

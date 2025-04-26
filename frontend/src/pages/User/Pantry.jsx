@@ -23,7 +23,8 @@ export default function Pantry() {
 
     return (
         <div className="px-4 py-10 md:px-10 lg:px-32 bg-gray-50 min-h-screen">
-            <h2 className="text-3xl font-bold text-orange-600 mb-6">My Pantry</h2>
+            <h2 className="text-3xl font-bold text-orange-600 mb-6">My
+                Pantry</h2>
 
             <form onSubmit={addIngredient} className="flex gap-4 mb-6">
                 <input
@@ -47,7 +48,8 @@ export default function Pantry() {
                         key={index}
                         className="bg-white p-4 shadow rounded-xl flex justify-between items-center"
                     >
-                        <span className="text-gray-800 font-medium">{item}</span>
+                        <span
+                            className="text-gray-800 font-medium">{item}</span>
                         <button
                             onClick={() => removeIngredient(item)}
                             className="text-red-500 hover:text-red-700 text-sm"

@@ -57,7 +57,14 @@ const loginUser = async (req, res) => {
 // @access  Public
 const registerUser = async (req, res) => {
     try {
-        const {username, email, password, dietary_preferences = '', allergens = '', favorite_cuisines = ''} = req.body;
+        const {
+            username,
+            email,
+            password,
+            dietary_preferences = '',
+            allergens = '',
+            favorite_cuisines = ''
+        } = req.body;
 
         if (!username || !email || !password) {
             return res.status(400).json({message: 'Please provide all required fields'});
@@ -157,7 +164,14 @@ const getUserProfile = async (req, res) => {
 // @access  Private
 const updateUserProfile = async (req, res) => {
     try {
-        const {username, email, password, dietary_preferences, allergens, favorite_cuisines} = req.body;
+        const {
+            username,
+            email,
+            password,
+            dietary_preferences,
+            allergens,
+            favorite_cuisines
+        } = req.body;
 
         const pool = req.pool;
 

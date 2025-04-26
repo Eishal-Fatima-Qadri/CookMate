@@ -15,6 +15,7 @@ import AdminProtectedRoute from './components/Utils/AdminProtectedRoute.jsx';
 import ManageRecipes from "./pages/Admin/ManageRecipes.jsx";
 import IngredientDatabase from "./pages/Admin/IngredientsDatabase.jsx";
 import EditRecipe from "./pages/Admin/EditRecipe.jsx";
+import PendingRecipeEditPage from "./pages/User/PendingRecipeEditPage.jsx";
 
 const App = () => {
     const location = useLocation();  // Get the current location
@@ -35,14 +36,17 @@ const App = () => {
             <Route path="/recipe/:id" element={<RecipeDetail/>}/>
             <Route path="/admin/recipes/add" element={<EditRecipe/>}/>
             <Route path="/admin/recipes/edit/:id" element={<EditRecipe/>}/>
+            <Route path="/recipes/add" element={<PendingRecipeEditPage />} />
 
             {/* Protected Routes */}
             <Route element={<ProtectedRoute/>}>
                 <Route path="/pantry" element={<Pantry/>}/>
                 <Route path="/admin/dashboard"
-                       element={<AdminProtectedRoute><AdminDashboard/></AdminProtectedRoute>}/>
+                       element={
+                           <AdminProtectedRoute><AdminDashboard/></AdminProtectedRoute>}/>
                 <Route path="/admin/recipes" element={<ManageRecipes/>}/>
-                <Route path="/admin/ingredients" element={<IngredientDatabase/>}/>
+                <Route path="/admin/ingredients"
+                       element={<IngredientDatabase/>}/>
             </Route>
             <Route
                 path="*"
