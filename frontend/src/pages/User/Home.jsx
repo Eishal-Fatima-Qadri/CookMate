@@ -1,75 +1,83 @@
-// pages/Home.jsx
+// src/pages/Home.jsx
 import React from "react";
-import {Link} from "react-router-dom";
-import foodJpg from "../../food-hero.jpg";
+import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
+import heroImg from "../../assets/food-hero.jpg";
 
 export default function Home() {
-    return (
-        <div className="text-center py-20 px-4 md:px-10 lg:px-32">
-            <h1 className="text-5xl font-extrabold text-orange-600 mb-6">
-                Welcome to CookMate!
-            </h1>
-            <p className="text-xl text-gray-700 mb-8">
-                Discover delicious recipes based on the ingredients you already
-                have.
-                CookMate helps you manage your pantry, track your meals, and
-                explore new
-                culinary creations.
-            </p>
-
-            {/* Hero Image Placeholder */}
-            <div
-                className="w-full h-64 bg-yellow-200 rounded-xl shadow-md mb-8 flex items-center justify-center overflow-hidden">
-                <img src={foodJpg} className="w-full"/>
-            </div>
-
-            <div className="flex flex-col md:flex-row justify-center gap-6">
-                <Link
-                    to="/register"
-                    className="bg-orange-500 text-white px-6 py-3 rounded-full shadow hover:bg-orange-600 transition"
-                >
-                    Get Started
-                </Link>
-                <Link
-                    to="/recipes"
-                    className="bg-green-500 text-white px-6 py-3 rounded-full shadow hover:bg-green-600 transition"
-                >
-                    Explore Recipes
-                </Link>
-            </div>
-
-            {/* Feature Cards */}
-            <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div
-                    className="bg-white p-6 rounded-xl shadow-md border-t-4 border-orange-300">
-                    <h3 className="text-lg font-semibold text-orange-600 mb-2">
-                        Smart Pantry
-                    </h3>
-                    <p className="text-gray-600">
-                        Keep track of ingredients and their expiration dates
-                        with ease.
-                    </p>
-                </div>
-                <div
-                    className="bg-white p-6 rounded-xl shadow-md border-t-4 border-yellow-300">
-                    <h3 className="text-lg font-semibold text-yellow-600 mb-2">
-                        Recipe Suggestions
-                    </h3>
-                    <p className="text-gray-600">
-                        Get recipe ideas tailored to what's in your kitchen.
-                    </p>
-                </div>
-                <div
-                    className="bg-white p-6 rounded-xl shadow-md border-t-4 border-green-300">
-                    <h3 className="text-lg font-semibold text-green-600 mb-2">
-                        Nutrition Insights
-                    </h3>
-                    <p className="text-gray-600">
-                        Track your meals and stay aligned with your health
-                        goals.
-                    </p>
-                </div>
-            </div>
+  return (
+    <div className="bg-[#FFF5F2] min-h-screen py-16 px-6 lg:px-24">
+      {/* Hero Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="bg-[#FFE8E5] rounded-3xl shadow-lg p-10 flex flex-col lg:flex-row items-center justify-between"
+      >
+        {/* Text */}
+        <div className="max-w-xl">
+          <h1 className="text-5xl font-extrabold text-[#1E2A39] mb-4">
+            Welcome to{" "}
+            <span className="text-400" style={{ color: "#f87171" }}>
+              CookMate!
+            </span>
+          </h1>
+          <p className="text-lg text-slate-700 mb-6">
+            Discover delicious recipes based on the ingredients you already
+            have. CookMate helps you manage your pantry, track your meals, and
+            explore new culinary creations.
+          </p>
+          <Link
+            to="/recipes"
+            className="hover:underline font-semibold"
+            style={{ color: "#f87171" }}
+          >
+            My recipes →
+          </Link>
         </div>
-    );
+
+        {/* Image */}
+        <div className="max-w-sm lg:max-w-md w-full">
+          <motion.img
+            src={heroImg}
+            alt="Hero Chef"
+            className="w-full h-auto rounded-xl object-contain"
+            initial={{ scale: 0.95 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.5 }}
+          />
+        </div>
+      </motion.div>
+
+      {/* Feature Cards */}
+      <div className="mt-20 grid gap-8 md:grid-cols-3">
+        {[
+          {
+            title: "Smart Pantry",
+            desc: "Track ingredients and expiration dates effortlessly.",
+            color: "border-cyan-400 text-cyan-600",
+          },
+          {
+            title: "Recipe Suggestions",
+            desc: "Ideas based on what’s already in your kitchen.",
+            color: "border-rose-400 text-rose-600",
+          },
+          {
+            title: "Nutrition Insights",
+            desc: "Monitor meals and align with health goals.",
+            color: "border-indigo-400 text-indigo-600",
+          },
+        ].map((card, i) => (
+          <motion.div
+            key={i}
+            className={`bg-white p-6 rounded-2xl shadow border-t-4 ${card.color}`}
+            whileHover={{ scale: 1.03 }}
+          >
+            <h3 className="text-xl font-semibold mb-2">{card.title}</h3>
+            <p className="text-gray-600">{card.desc}</p>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  );
 }
