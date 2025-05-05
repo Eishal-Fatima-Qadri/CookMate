@@ -1,9 +1,9 @@
 import React, {useState} from "react";
 import {useNavigate} from "react-router-dom";
-import {useUser} from '../context/UserContext'
+import {useAuth} from '../context/AuthContext';
 
 export default function Login() {
-    const {setUser} = useUser();
+    const {login} = useAuth();
     const [formData, setFormData] = useState({
         email: "",
         password: "",
@@ -45,16 +45,8 @@ export default function Login() {
                 throw new Error(data.message || 'Login failed');
             }
 
-            // Save user data to localStorage
-            setUser(data);
-            localStorage.setItem('userInfo', JSON.stringify(data));
-
-            // Redirect based on user role
-            if (data && data.role === 'admin') {
-                navigate('/admin/dashboard');
-            } else {
-                navigate('/');
-            }
+            // Use the login function from AuthContext
+            login(data);
 
         } catch (err) {
             setError(err.message);

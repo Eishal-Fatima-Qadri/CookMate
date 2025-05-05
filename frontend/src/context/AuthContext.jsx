@@ -1,5 +1,5 @@
 import React, {createContext, useContext, useEffect, useState} from 'react';
-import {useNavigate} from 'react-router-dom';
+import {useNavigate, useLocation} from 'react-router-dom';
 
 const AuthContext = createContext(null);
 
@@ -7,6 +7,7 @@ export const AuthProvider = ({children}) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const location = useLocation();
 
     // Load user from localStorage on app start
     useEffect(() => {
@@ -29,6 +30,33 @@ export const AuthProvider = ({children}) => {
         }
     }, []);
 
+    // Redirect based on user role when application loads
+    useEffect(() => {
+        if (!loading && user) {
+            // Only redirect if we're not already on an admin page
+            const isAdminPage = location.pathname.startsWith('/admin');
+
+            if (user.role === 'admin' && !isAdminPage) {
+                console.log("Redirecting admin to dashboard on page load");
+                navigate('/admin/dashboard');
+            }
+        }
+    }, [loading, user, navigate, location.pathname]);
+
+    // Enhanced updateUser function that maintains synchronization with localStorage
+    const updateUser = (userData) => {
+        if (userData === null) {
+            // Handle logout
+            localStorage.removeItem('userInfo');
+            setUser(null);
+        } else {
+            // Handle login/update - Clear first to avoid stale data
+            localStorage.removeItem('userInfo');
+            localStorage.setItem('userInfo', JSON.stringify(userData));
+            setUser(userData);
+        }
+    };
+
     // Login user
     const login = async (userData) => {
         // Make sure role is included and properly formatted in userData
@@ -37,15 +65,19 @@ export const AuthProvider = ({children}) => {
         // If role is missing or needs transformation, handle it here
         // Example: if (userData && !userData.role) userData.role = 'user';
 
-        localStorage.setItem('userInfo', JSON.stringify(userData));
-        setUser(userData);
-        navigate('/');
+        updateUser(userData);
+        
+        // Navigate based on role
+        if (userData && userData.role === 'admin') {
+            navigate('/admin/dashboard');
+        } else {
+            navigate('/');
+        }
     };
 
     // Logout user
     const logout = () => {
-        localStorage.removeItem('userInfo');
-        setUser(null);
+        updateUser(null);
         navigate('/login');
     };
 
@@ -65,7 +97,14 @@ export const AuthProvider = ({children}) => {
     };
 
     return (
-        <AuthContext.Provider value={{user, loading, login, logout, isAdmin}}>
+        <AuthContext.Provider value={{
+            user, 
+            loading, 
+            login, 
+            logout, 
+            isAdmin,
+            setUser: updateUser // Provide the updated setUser function
+        }}>
             {children}
         </AuthContext.Provider>
     );
@@ -79,3 +118,6 @@ export const useAuth = () => {
     }
     return context;
 };
+
+// Alias for backward compatibility with components using useUser
+export const useUser = useAuth;

@@ -1,9 +1,9 @@
 import React, {useState} from "react";
 import {useNavigate} from "react-router-dom";
-import {useUser} from '../context/UserContext.jsx';
+import {useAuth} from '../context/AuthContext.jsx';
 
 export default function Register() {
-    const {setUser} = useUser();
+    const {login} = useAuth();
     const [formData, setFormData] = useState({
         username: "",
         email: "",
@@ -71,8 +71,7 @@ export default function Register() {
             }
 
             // Save user data to localStorage
-            setUser(data);
-            localStorage.setItem('userInfo', JSON.stringify(data));
+            login(data);
 
             // Redirect to home page
             navigate('/');
