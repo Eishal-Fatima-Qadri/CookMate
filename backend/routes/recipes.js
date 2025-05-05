@@ -1,4 +1,5 @@
 const express = require('express');
+const {sql} = require("../config/db");
 const router = express.Router();
 
 // Test endpoint to verify API connectivity
@@ -15,7 +16,8 @@ router.get('/test', async (req, res) => {
 router.get('/', async (req, res) => {
     try {
         const pool = req.pool;
-        const result = await pool.request().query('SELECT * FROM Recipes');
+        const request = pool.request();
+        const result = await request.query('SELECT * FROM Recipes');
 
         res.setHeader('Content-Type', 'application/json');
         res.json(result.recordset);
@@ -33,9 +35,8 @@ router.get('/', async (req, res) => {
 router.get('/search', async (req, res) => {
     try {
         const pool = req.pool;
-        const query = req.query.query;
+        const {query: q} = req.query;
 
-        // Using parameterized query to prevent SQL injection
         const searchQuery = `
             SELECT r.*
             FROM Recipes r
@@ -50,7 +51,7 @@ router.get('/search', async (req, res) => {
         `;
 
         const request = pool.request();
-        request.input('query', `%${query}%`);
+        request.input('query', sql.VarChar, `%${q}%`);
         const result = await request.query(searchQuery);
 
         res.json(result.recordset);
@@ -64,53 +65,50 @@ router.get('/search', async (req, res) => {
 router.get('/:id', async (req, res) => {
     try {
         const pool = req.pool;
-        const recipeId = parseInt(req.params.id);
+        const recipeId = parseInt(req.params.id, 10);
 
-        // Using parameterized query
-        const recipeQuery = `
-            SELECT *
-            FROM Recipes
-            WHERE recipe_id = @recipeId
-        `;
+        // Fetch recipe
+        const requestRecipe = pool.request();
+        requestRecipe.input('recipeId', sql.Int, recipeId);
+        const {recordset: recipes} = await requestRecipe.query(
+            `SELECT *
+             FROM Recipes
+             WHERE recipe_id = @recipeId`
+        );
 
-        const request = pool.request();
-        request.input('recipeId', recipeId);
-        const recipeResult = await request.query(recipeQuery);
-
-        if (recipeResult.recordset.length === 0) {
+        if (!recipes.length) {
             return res.status(404).json({
                 status: 'error',
                 message: 'Recipe not found'
             });
         }
+        const recipe = recipes[0];
 
-        const recipe = recipeResult.recordset[0];
+        // Fetch ingredients
+        const requestIng = pool.request();
+        requestIng.input('recipeId', sql.Int, recipeId);
+        const {recordset: ingredients} = await requestIng.query(
+            `
+                SELECT i.ingredient_id, i.name, ri.quantity, ri.unit
+                FROM Ingredients i
+                         JOIN RecipeIngredients ri ON i.ingredient_id = ri.ingredient_id
+                WHERE ri.recipe_id = @recipeId
+            `
+        );
+        recipe.ingredients = ingredients;
 
-        // Fetch ingredients for the recipe
-        const ingredientsQuery = `
-            SELECT i.ingredient_id, i.name, ri.quantity, ri.unit
-            FROM Ingredients i
-                     JOIN RecipeIngredients ri ON i.ingredient_id = ri.ingredient_id
-            WHERE ri.recipe_id = @recipeId
-        `;
-
-        const ingredientsRequest = pool.request();
-        ingredientsRequest.input('recipeId', recipeId);
-        const ingredientsResult = await ingredientsRequest.query(ingredientsQuery);
-        recipe.ingredients = ingredientsResult.recordset;
-
-        // Fetch steps for the recipe
-        const stepsQuery = `
-            SELECT step_number, description
-            FROM RecipeSteps
-            WHERE recipe_id = @recipeId
-            ORDER BY step_number;
-        `;
-
-        const stepsRequest = pool.request();
-        stepsRequest.input('recipeId', recipeId);
-        const stepsResult = await stepsRequest.query(stepsQuery);
-        recipe.steps = stepsResult.recordset;
+        // Fetch steps
+        const requestSteps = pool.request();
+        requestSteps.input('recipeId', sql.Int, recipeId);
+        const {recordset: steps} = await requestSteps.query(
+            `
+                SELECT step_number, description
+                FROM RecipeSteps
+                WHERE recipe_id = @recipeId
+                ORDER BY step_number
+            `
+        );
+        recipe.steps = steps;
 
         res.json(recipe);
     } catch (err) {
@@ -129,92 +127,40 @@ router.post('/', async (req, res) => {
         const pool = req.pool;
         const {
             title,
-            description,
+            description = '',
             instructions,
             cooking_time,
             difficulty,
             cuisine_type,
-            created_by = 1
+            created_by = 1,
         } = req.body;
 
-        // Using parameterized query to prevent SQL injection and handle string escaping properly
         const insertQuery = `
             INSERT INTO Recipes (title, description, cooking_time, difficulty,
                                  cuisine_type, instructions, created_by,
                                  created_at, updated_at)
             VALUES (@title, @description, @cooking_time, @difficulty,
-                    @cuisine_type, @instructions, @created_by,
-                    GETDATE(), GETDATE());
-            SELECT SCOPE_IDENTITY() AS recipe_id;
+                    @cuisine_type, @instructions, @created_by, GETDATE(),
+                    GETDATE());
+            SELECT SCOPE_IDENTITY() as recipe_id;
         `;
 
         const request = pool.request();
-        request.input('title', title);
-        request.input('description', description || '');
-        request.input('cooking_time', cooking_time);
-        request.input('difficulty', difficulty);
-        request.input('cuisine_type', cuisine_type);
-        request.input('instructions', instructions);
-        request.input('created_by', created_by);
+        request.input('title', sql.VarChar, title);
+        request.input('description', sql.VarChar, description);
+        request.input('cooking_time', sql.Int, cooking_time);
+        request.input('difficulty', sql.VarChar, difficulty);
+        request.input('cuisine_type', sql.VarChar, cuisine_type);
+        request.input('instructions', sql.VarChar, instructions);
+        request.input('created_by', sql.Int, created_by);
 
-        const result = await request.query(insertQuery);
-        const newRecipeId = result.recordset[0].recipe_id;
+        const {recordset} = await request.query(insertQuery);
+        const newId = recordset[0].recipe_id;
 
         res.status(201).json({
             status: 'success',
             message: 'Recipe created successfully',
-            recipe_id: newRecipeId
-        });
-    } catch (err) {
-        console.error('Error in POST /recipes:', err);
-        res.status(500).json({
-            status: 'error',
-            message: 'Server Error',
-            details: err.message
-        });
-    }
-});
-
-router.post('/pending', async (req, res) => {
-    try {
-        const pool = req.pool;
-        const {
-            title,
-            description,
-            instructions,
-            cooking_time,
-            difficulty,
-            cuisine_type,
-            created_by = 1
-        } = req.body;
-
-        // Using a parameterized query to prevent SQL injection and handle string escaping properly
-        const insertQuery = `
-            INSERT INTO PendingRecipes (title, description, cooking_time, difficulty,
-                                 cuisine_type, instructions, created_by,
-                                 created_at, updated_at)
-            VALUES (@title, @description, @cooking_time, @difficulty,
-                    @cuisine_type, @instructions, @created_by,
-                    GETDATE(), GETDATE());
-            SELECT SCOPE_IDENTITY() AS recipe_id;
-        `;
-
-        const request = pool.request();
-        request.input('title', title);
-        request.input('description', description || '');
-        request.input('cooking_time', cooking_time);
-        request.input('difficulty', difficulty);
-        request.input('cuisine_type', cuisine_type);
-        request.input('instructions', instructions);
-        request.input('created_by', created_by);
-
-        const result = await request.query(insertQuery);
-        const newRecipeId = result.recordset[0].recipe_id;
-
-        res.status(201).json({
-            status: 'success',
-            message: 'Recipe created successfully',
-            recipe_id: newRecipeId
+            recipe_id: newId
         });
     } catch (err) {
         console.error('Error in POST /recipes:', err);
@@ -230,17 +176,16 @@ router.post('/pending', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         const pool = req.pool;
-        const recipeId = parseInt(req.params.id);
+        const recipeId = parseInt(req.params.id, 10);
         const {
             title,
-            description,
+            description = '',
             instructions,
             cooking_time,
             difficulty,
             cuisine_type
         } = req.body;
 
-        // Using parameterized query
         const updateQuery = `
             UPDATE Recipes
             SET title        = @title,
@@ -254,26 +199,23 @@ router.put('/:id', async (req, res) => {
         `;
 
         const request = pool.request();
-        request.input('title', title);
-        request.input('description', description || '');
-        request.input('instructions', instructions);
-        request.input('cooking_time', cooking_time);
-        request.input('difficulty', difficulty);
-        request.input('cuisine_type', cuisine_type);
-        request.input('recipeId', recipeId);
+        request.input('title', sql.VarChar, title);
+        request.input('description', sql.VarChar, description);
+        request.input('instructions', sql.VarChar, instructions);
+        request.input('cooking_time', sql.Int, cooking_time);
+        request.input('difficulty', sql.VarChar, difficulty);
+        request.input('cuisine_type', sql.VarChar, cuisine_type);
+        request.input('recipeId', sql.Int, recipeId);
 
         const result = await request.query(updateQuery);
-
-        if (result.rowsAffected[0] === 0) {
+        if (!result.rowsAffected[0]) {
             return res.status(404).json({
                 status: 'error',
                 message: 'Recipe not found'
             });
         }
 
-        res.json({
-            status: 'success', message: 'Recipe updated successfully'
-        });
+        res.json({status: 'success', message: 'Recipe updated successfully'});
     } catch (err) {
         console.error('Error in PUT /recipes/:id:', err);
         res.status(500).json({
@@ -284,44 +226,34 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// Delete recipe
+// Delete recipe & related records
 router.delete('/:id', async (req, res) => {
     try {
         const pool = req.pool;
-        const recipeId = parseInt(req.params.id);
+        const recipeId = parseInt(req.params.id, 10);
 
-        // Using parameterized queries for all delete operations
         const request = pool.request();
-        request.input('recipeId', recipeId);
+        request.input('recipeId', sql.Int, recipeId);
 
-        // First delete from related tables to maintain referential integrity
-        await request.query(`DELETE
-                             FROM RecipeIngredients
-                             WHERE recipe_id = @recipeId`);
-        await request.query(`DELETE
-                             FROM RecipeSteps
-                             WHERE recipe_id = @recipeId`);
-        await request.query(`DELETE
-                             FROM Reviews
-                             WHERE recipe_id = @recipeId`);
-        await request.query(`DELETE
-                             FROM SavedRecipes
-                             WHERE recipe_id = @recipeId`);
+        const deleteRelated = [
+            'DELETE FROM RecipeIngredients WHERE recipe_id = @recipeId',
+            'DELETE FROM RecipeSteps WHERE recipe_id = @recipeId',
+            'DELETE FROM Reviews WHERE recipe_id = @recipeId',
+            'DELETE FROM SavedRecipes WHERE recipe_id = @recipeId',
+        ];
+        for (const q of deleteRelated) {
+            await request.query(q);
+        }
 
-        const deleteResult = await request.query(`DELETE
-                                                  FROM Recipes
-                                                  WHERE recipe_id = @recipeId`);
-
-        if (deleteResult.rowsAffected[0] === 0) {
+        const deleteMain = await request.query('DELETE FROM Recipes WHERE recipe_id = @recipeId');
+        if (!deleteMain.rowsAffected[0]) {
             return res.status(404).json({
                 status: 'error',
                 message: 'Recipe not found'
             });
         }
 
-        res.json({
-            status: 'success', message: 'Recipe deleted successfully'
-        });
+        res.json({status: 'success', message: 'Recipe deleted successfully'});
     } catch (err) {
         console.error('Error in DELETE /recipes/:id:', err);
         res.status(500).json({
@@ -332,25 +264,19 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
-// Add ingredient to recipe
+// Ingredients endpoints
 router.post('/:id/ingredients', async (req, res) => {
     try {
         const pool = req.pool;
-        const recipeId = parseInt(req.params.id);
+        const recipeId = parseInt(req.params.id, 10);
         const {ingredient_id, quantity, unit} = req.body;
 
-        // Using parameterized query
-        const insertQuery = `
-            INSERT INTO RecipeIngredients (recipe_id, ingredient_id, quantity, unit)
-            VALUES (@recipeId, @ingredientId, @quantity, @unit)
-        `;
-
+        const insertQuery = 'INSERT INTO RecipeIngredients (recipe_id, ingredient_id, quantity, unit) VALUES (@recipeId, @ingredientId, @quantity, @unit)';
         const request = pool.request();
-        request.input('recipeId', recipeId);
-        request.input('ingredientId', ingredient_id);
-        request.input('quantity', quantity);
-        request.input('unit', unit);
-
+        request.input('recipeId', sql.Int, recipeId);
+        request.input('ingredientId', sql.Int, ingredient_id);
+        request.input('quantity', sql.Decimal, quantity);
+        request.input('unit', sql.VarChar, unit);
         await request.query(insertQuery);
 
         res.status(201).json({
@@ -367,25 +293,22 @@ router.post('/:id/ingredients', async (req, res) => {
     }
 });
 
-// Get all ingredients for a recipe
 router.get('/:id/ingredients', async (req, res) => {
     try {
         const pool = req.pool;
-        const recipeId = parseInt(req.params.id);
+        const recipeId = parseInt(req.params.id, 10);
 
-        // Using parameterized query
         const query = `
             SELECT i.ingredient_id, i.name, ri.quantity, ri.unit
             FROM Ingredients i
                      JOIN RecipeIngredients ri ON i.ingredient_id = ri.ingredient_id
             WHERE ri.recipe_id = @recipeId
         `;
-
         const request = pool.request();
-        request.input('recipeId', recipeId);
-        const result = await request.query(query);
+        request.input('recipeId', sql.Int, recipeId);
+        const {recordset} = await request.query(query);
 
-        res.json(result.recordset);
+        res.json(recordset);
     } catch (err) {
         console.error('Error in GET /recipes/:id/ingredients:', err);
         res.status(500).json({
@@ -396,50 +319,13 @@ router.get('/:id/ingredients', async (req, res) => {
     }
 });
 
-// Add pending ingredient to recipe
-router.post('/:id/pending-ingredients', async (req, res) => {
-    try {
-        const pool = req.pool;
-        const recipeId = parseInt(req.params.id);
-        const {ingredient_id, quantity, unit} = req.body;
-
-        // Using parameterized query
-        const insertQuery = `
-            INSERT INTO PendingRecipeIngredients (recipe_id, ingredient_id, quantity, unit)
-            VALUES (@recipeId, @ingredientId, @quantity, @unit)
-        `;
-
-        const request = pool.request();
-        request.input('recipeId', recipeId);
-        request.input('ingredientId', ingredient_id);
-        request.input('quantity', quantity);
-        request.input('unit', unit);
-
-        await request.query(insertQuery);
-
-        res.status(201).json({
-            status: 'success',
-            message: 'Ingredient added to pending recipe successfully'
-        });
-    } catch (err) {
-        console.error('Error in POST /recipes/:id/pending-ingredients:', err);
-        res.status(500).json({
-            status: 'error',
-            message: 'Server Error',
-            details: err.message
-        });
-    }
-});
-
-// Update ingredient in recipe
 router.put('/:recipeId/ingredients/:ingredientId', async (req, res) => {
     try {
         const pool = req.pool;
-        const recipeId = parseInt(req.params.recipeId);
-        const ingredientId = parseInt(req.params.ingredientId);
+        const recipeId = parseInt(req.params.recipeId, 10);
+        const ingredientId = parseInt(req.params.ingredientId, 10);
         const {quantity, unit} = req.body;
 
-        // Using parameterized query
         const updateQuery = `
             UPDATE RecipeIngredients
             SET quantity = @quantity,
@@ -447,16 +333,14 @@ router.put('/:recipeId/ingredients/:ingredientId', async (req, res) => {
             WHERE recipe_id = @recipeId
               AND ingredient_id = @ingredientId
         `;
-
         const request = pool.request();
-        request.input('quantity', quantity);
-        request.input('unit', unit);
-        request.input('recipeId', recipeId);
-        request.input('ingredientId', ingredientId);
+        request.input('quantity', sql.Decimal, quantity);
+        request.input('unit', sql.VarChar, unit);
+        request.input('recipeId', sql.Int, recipeId);
+        request.input('ingredientId', sql.Int, ingredientId);
 
         const result = await request.query(updateQuery);
-
-        if (result.rowsAffected[0] === 0) {
+        if (!result.rowsAffected[0]) {
             return res.status(404).json({
                 status: 'error',
                 message: 'Ingredient not found in this recipe'
@@ -464,7 +348,8 @@ router.put('/:recipeId/ingredients/:ingredientId', async (req, res) => {
         }
 
         res.json({
-            status: 'success', message: 'Recipe ingredient updated successfully'
+            status: 'success',
+            message: 'Recipe ingredient updated successfully'
         });
     } catch (err) {
         console.error('Error in PUT /recipes/:recipeId/ingredients/:ingredientId:', err);
@@ -476,28 +361,22 @@ router.put('/:recipeId/ingredients/:ingredientId', async (req, res) => {
     }
 });
 
-// Remove ingredient from recipe
 router.delete('/:recipeId/ingredients/:ingredientId', async (req, res) => {
     try {
         const pool = req.pool;
-        const recipeId = parseInt(req.params.recipeId);
-        const ingredientId = parseInt(req.params.ingredientId);
+        const recipeId = parseInt(req.params.recipeId, 10);
+        const ingredientId = parseInt(req.params.ingredientId, 10);
 
-        // Using parameterized query
         const deleteQuery = `
-            DELETE
-            FROM RecipeIngredients
-            WHERE recipe_id = @recipeId
-              AND ingredient_id = @ingredientId
+            DELETE FROM RecipeIngredients
+            WHERE recipe_id = @recipeId AND ingredient_id = @ingredientId
         `;
-
         const request = pool.request();
-        request.input('recipeId', recipeId);
-        request.input('ingredientId', ingredientId);
-
+        request.input('recipeId', sql.Int, recipeId);
+        request.input('ingredientId', sql.Int, ingredientId);
         const result = await request.query(deleteQuery);
 
-        if (result.rowsAffected[0] === 0) {
+        if (!result.rowsAffected[0]) {
             return res.status(404).json({
                 status: 'error',
                 message: 'Ingredient not found in this recipe'
@@ -522,21 +401,19 @@ router.delete('/:recipeId/ingredients/:ingredientId', async (req, res) => {
 router.get('/:id/steps', async (req, res) => {
     try {
         const pool = req.pool;
-        const recipeId = parseInt(req.params.id);
+        const recipeId = parseInt(req.params.id, 10);
 
-        // Using parameterized query
         const query = `
             SELECT step_number, description
             FROM RecipeSteps
             WHERE recipe_id = @recipeId
-            ORDER BY step_number;
+            ORDER BY step_number
         `;
-
         const request = pool.request();
-        request.input('recipeId', recipeId);
-        const result = await request.query(query);
+        request.input('recipeId', sql.Int, recipeId);
+        const {recordset} = await request.query(query);
 
-        res.json(result.recordset);
+        res.json(recordset);
     } catch (err) {
         console.error(`Error in GET /recipes/${req.params.id}/steps:`, err);
         res.status(500).json({
@@ -544,97 +421,6 @@ router.get('/:id/steps', async (req, res) => {
             message: 'Server Error',
             details: err.message
         });
-    }
-});
-
-// Get all pending ingredients for a recipe
-router.get('/:id/pending-ingredients', async (req, res) => {
-    try {
-        const pool = req.pool;
-        const recipeId = parseInt(req.params.id);
-        const query = `
-      SELECT i.ingredient_id, i.name, pri.quantity, pri.unit
-      FROM Ingredients i
-           JOIN PendingRecipeIngredients pri
-             ON i.ingredient_id = pri.ingredient_id
-      WHERE pri.recipe_id = @recipeId
-    `;
-        const request = pool.request();
-        request.input('recipeId', recipeId);
-        const result = await request.query(query);
-        res.json(result.recordset);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({status:'error',message:'Server Error',details:err.message});
-    }
-});
-
-// Update a pending ingredient
-router.patch('/:id/pending-ingredients/:ingredientId', async (req, res) => {
-    const pool = req.pool;
-    const recipeId     = parseInt(req.params.id, 10);
-    const ingredientId = parseInt(req.params.ingredientId, 10);
-    const allowed      = ['quantity', 'unit'];
-    const updates      = [];
-    const request      = pool.request();
-
-    request.input('recipeId', recipeId);
-    request.input('ingredientId', ingredientId);
-
-    for (const key of allowed) {
-        if (req.body[key] !== undefined) {
-            updates.push(`${key} = @${key}`);
-            request.input(key, req.body[key]);
-        }
-    }
-
-    if (updates.length === 0) {
-        return res.status(400).json({ status: 'error', message: 'No valid fields provided for update' });
-    }
-
-    const sql = `
-    UPDATE PendingRecipeIngredients
-       SET ${updates.join(', ')}
-     WHERE recipe_id     = @recipeId
-       AND ingredient_id = @ingredientId
-  `;
-
-    try {
-        const result = await request.query(sql);
-        if (result.rowsAffected[0] === 0) {
-            return res.status(404).json({ status: 'error', message: 'Pending ingredient not found' });
-        }
-        res.json({ status: 'success', message: 'Pending ingredient updated successfully' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ status: 'error', message: 'Server Error', details: err.message });
-    }
-});
-
-// Delete a pending ingredient
-router.delete('/:id/pending-ingredients/:ingredientId', async (req, res) => {
-    try {
-        const pool = req.pool;
-        const recipeId     = parseInt(req.params.id);
-        const ingredientId = parseInt(req.params.ingredientId);
-
-        const deleteQuery = `
-      DELETE FROM PendingRecipeIngredients
-      WHERE recipe_id     = @recipeId
-        AND ingredient_id = @ingredientId
-    `;
-        const request = pool.request();
-        request.input('recipeId', recipeId);
-        request.input('ingredientId', ingredientId);
-
-        const result = await request.query(deleteQuery);
-        if (result.rowsAffected[0] === 0) {
-            return res.status(404).json({status:'error',message:'Pending ingredient not found'});
-        }
-        res.json({status:'success',message:'Pending ingredient removed'});
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({status:'error',message:'Server Error',details:err.message});
     }
 });
 
