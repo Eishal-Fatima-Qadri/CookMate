@@ -83,13 +83,16 @@ const registerUser = async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, salt);
 
         const insertQuery = `
-            INSERT INTO Users (username, email, password, role, dietary_preferences, allergens, favorite_cuisines,
+            INSERT INTO Users (username, email, password, role,
+                               dietary_preferences, allergens,
+                               favorite_cuisines,
                                created_at)
             OUTPUT INSERTED.user_id,
                    INSERTED.username,
                    INSERTED.email,
                    INSERTED.role
-            VALUES (@username, @email, @password, @role, @dietary_preferences, @allergens, @favorite_cuisines,
+            VALUES (@username, @email, @password, @role, @dietary_preferences,
+                    @allergens, @favorite_cuisines,
                     GETDATE())
         `;
 
@@ -132,7 +135,13 @@ const getUserProfile = async (req, res) => {
         const result = await pool.request()
             .input('userId', sql.Int, req.user.id)
             .query(`
-                SELECT user_id, username, email, role, dietary_preferences, allergens, favorite_cuisines
+                SELECT user_id,
+                       username,
+                       email,
+                       role,
+                       dietary_preferences,
+                       allergens,
+                       favorite_cuisines
                 FROM Users
                 WHERE user_id = @userId
             `);

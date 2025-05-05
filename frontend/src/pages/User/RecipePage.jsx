@@ -83,7 +83,8 @@ const RecipePage = () => {
         <div className="bg-gray-100 min-h-screen">
             <main className="container mx-auto py-8 px-4">
                 <div className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold text-gray-800">Your Recipes</h1>
+                    <h1 className="text-2xl font-bold text-gray-800">Your
+                        Recipes</h1>
                     <Link
                         to="/recipes/add"
                         className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
@@ -109,11 +110,14 @@ const RecipePage = () => {
                             viewBox="0 0 24 24"
                             stroke="currentColor"
                         >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            <path strokeLinecap="round" strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                         </svg>
                         {loading && (
                             <div className="absolute right-3 top-3">
-                                <div className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                                <div
+                                    className="animate-spin h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full"></div>
                             </div>
                         )}
                     </div>
@@ -121,7 +125,8 @@ const RecipePage = () => {
 
                 {/* Debug info */}
                 {debugInfo && (
-                    <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded mb-4">
+                    <div
+                        className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded mb-4">
                         <div className="flex justify-between">
                             <h3 className="font-bold">Debug Info:</h3>
                             <button
@@ -131,13 +136,15 @@ const RecipePage = () => {
                                 &times;
                             </button>
                         </div>
-                        <pre className="text-xs overflow-x-auto mt-2">{debugInfo}</pre>
+                        <pre
+                            className="text-xs overflow-x-auto mt-2">{debugInfo}</pre>
                     </div>
                 )}
 
                 {/* Error message */}
                 {error && (
-                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                    <div
+                        className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
                         <div className="flex justify-between">
                             <strong>Error:</strong> {error}
                             <button
@@ -153,55 +160,72 @@ const RecipePage = () => {
                 {/* Loading state */}
                 {loading ? (
                     <div className="text-center py-8">
-                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+                        <div
+                            className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
                         <p className="mt-2">Loading recipes...</p>
                     </div>
                 ) : (
                     <>
                         {/* Empty state */}
                         {recipes.length === 0 && !error && (
-                            <div className="bg-white rounded-lg shadow p-8 text-center">
-                                <svg className="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            <div
+                                className="bg-white rounded-lg shadow p-8 text-center">
+                                <svg className="mx-auto h-12 w-12 text-gray-400"
+                                     xmlns="http://www.w3.org/2000/svg"
+                                     fill="none" viewBox="0 0 24 24"
+                                     stroke="currentColor">
+                                    <path strokeLinecap="round"
+                                          strokeLinejoin="round" strokeWidth={2}
+                                          d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
                                 </svg>
-                                <p className="mt-2 text-gray-600">No recipes available. Click 'Add New Recipe' to get started!</p>
+                                <p className="mt-2 text-gray-600">No recipes
+                                    available. Click 'Add New Recipe' to get
+                                    started!</p>
                             </div>
                         )}
 
                         {/* Recipe Grid */}
                         {recipes.length > 0 && (
                             <>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <div
+                                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {recipes.map(recipe => (
-                                        <div key={recipe.recipe_id} className="bg-white rounded-lg shadow overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full">
-                                            <div className="p-5 flex-1 flex flex-col">
+                                        <div key={recipe.recipe_id}
+                                             className="bg-white rounded-lg shadow overflow-hidden hover:shadow-md transition-shadow flex flex-col h-full">
+                                            <div
+                                                className="p-5 flex-1 flex flex-col">
                                                 <h2 className="text-xl font-semibold text-gray-800 mb-2">{recipe.title}</h2>
                                                 <p className="text-gray-600 mb-4 flex-1">{recipe.description}</p>
 
                                                 {/* Card footer with fixed position at the bottom */}
                                                 <div className="mt-auto">
                                                     {/* Tags section */}
-                                                    <div className="flex flex-wrap gap-2 mb-4">
+                                                    <div
+                                                        className="flex flex-wrap gap-2 mb-4">
                                                         {recipe.cuisine_type && (
-                                                            <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                                                            <span
+                                                                className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
                                                                 {recipe.cuisine_type}
                                                             </span>
                                                         )}
                                                         {recipe.cooking_time && (
-                                                            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                                                            <span
+                                                                className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
                                                                 {recipe.cooking_time}
                                                             </span>
                                                         )}
                                                         {recipe.difficulty && (
-                                                            <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">
+                                                            <span
+                                                                className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">
                                                                 {recipe.difficulty}
                                                             </span>
                                                         )}
                                                     </div>
 
                                                     {/* View Details button */}
-                                                    <Link to={`/recipe/${recipe.recipe_id}`}
-                                                          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded inline-block w-full text-center">
+                                                    <Link
+                                                        to={`/recipe/${recipe.recipe_id}`}
+                                                        className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded inline-block w-full text-center">
                                                         View Details
                                                     </Link>
                                                 </div>

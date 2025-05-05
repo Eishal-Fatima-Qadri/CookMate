@@ -175,8 +175,10 @@ export default function ManageRecipes() {
                     </div>
                 ) : (
                     <>
-                        <div className="overflow-x-auto bg-white rounded-lg shadow">
-                            <table className="min-w-full divide-y divide-gray-200">
+                        <div
+                            className="overflow-x-auto bg-white rounded-lg shadow">
+                            <table
+                                className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-50">
                                 <tr>
                                     <th scope="col"
@@ -201,7 +203,8 @@ export default function ManageRecipes() {
                                     </th>
                                 </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
+                                <tbody
+                                    className="bg-white divide-y divide-gray-200">
                                 {recipes.length > 0 ? (
                                     recipes.map(recipe => (
                                         <tr key={recipe.recipe_id}
