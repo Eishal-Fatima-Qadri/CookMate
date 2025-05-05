@@ -428,4 +428,38 @@ router.get('/:id/steps', async (req, res) => {
     }
 });
 
+// Get recipe image URL
+router.get('/:id/image', async (req, res) => {
+    try {
+        const pool = req.pool;
+        const recipeId = parseInt(req.params.id, 10);
+
+        const query = `
+            SELECT image_url
+            FROM recipe_images
+            WHERE recipe_id = @recipeId
+        `;
+
+        const request = pool.request();
+        request.input('recipeId', sql.Int, recipeId);
+        const { recordset } = await request.query(query);
+
+        if (recordset.length === 0) {
+            return res.status(404).json({
+                status: 'not_found',
+                message: 'No image found for this recipe'
+            });
+        }
+
+        res.json(recordset[0]);
+    } catch (err) {
+        console.error(`Error in GET /recipes/${req.params.id}/image:`, err);
+        res.status(500).json({
+            status: 'error',
+            message: 'Server Error',
+            details: err.message
+        });
+    }
+});
+
 module.exports = router;
