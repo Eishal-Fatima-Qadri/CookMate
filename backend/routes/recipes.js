@@ -91,7 +91,8 @@ router.get('/:id', async (req, res) => {
             `
                 SELECT i.ingredient_id, i.name, ri.quantity, ri.unit
                 FROM Ingredients i
-                         JOIN RecipeIngredients ri ON i.ingredient_id = ri.ingredient_id
+                         JOIN RecipeIngredients ri
+                              ON i.ingredient_id = ri.ingredient_id
                 WHERE ri.recipe_id = @recipeId
             `
         );
@@ -301,7 +302,8 @@ router.get('/:id/ingredients', async (req, res) => {
         const query = `
             SELECT i.ingredient_id, i.name, ri.quantity, ri.unit
             FROM Ingredients i
-                     JOIN RecipeIngredients ri ON i.ingredient_id = ri.ingredient_id
+                     JOIN RecipeIngredients ri
+                          ON i.ingredient_id = ri.ingredient_id
             WHERE ri.recipe_id = @recipeId
         `;
         const request = pool.request();
@@ -368,8 +370,10 @@ router.delete('/:recipeId/ingredients/:ingredientId', async (req, res) => {
         const ingredientId = parseInt(req.params.ingredientId, 10);
 
         const deleteQuery = `
-            DELETE FROM RecipeIngredients
-            WHERE recipe_id = @recipeId AND ingredient_id = @ingredientId
+            DELETE
+            FROM RecipeIngredients
+            WHERE recipe_id = @recipeId
+              AND ingredient_id = @ingredientId
         `;
         const request = pool.request();
         request.input('recipeId', sql.Int, recipeId);

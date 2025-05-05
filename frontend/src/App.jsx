@@ -36,7 +36,7 @@ const App = () => {
             <Route path="/recipe/:id" element={<RecipeDetail/>}/>
             <Route path="/admin/recipes/add" element={<EditRecipe/>}/>
             <Route path="/admin/recipes/edit/:id" element={<EditRecipe/>}/>
-            <Route path="/recipes/add" element={<PendingRecipeEditPage />} />
+            <Route path="/recipes/add" element={<PendingRecipeEditPage/>}/>
 
             {/* Protected Routes */}
             <Route element={<ProtectedRoute/>}>
