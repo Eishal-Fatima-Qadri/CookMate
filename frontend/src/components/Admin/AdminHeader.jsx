@@ -1,14 +1,12 @@
 import {Link, useNavigate} from "react-router-dom";
-import {useUser} from "../../context/UserContext"; // update path as needed
+import {useAuth} from "../../context/AuthContext"; // update path as needed
 
 export default function AdminHeader() {
-    const {user, setUser} = useUser();
+    const {user, logout} = useAuth();
     const navigate = useNavigate();
 
     const handleLogout = () => {
-        localStorage.removeItem('userInfo');
-        setUser(null);
-        navigate('/login');
+        logout();
     };
 
     return (

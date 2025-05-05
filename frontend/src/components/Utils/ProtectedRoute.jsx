@@ -9,19 +9,21 @@ const ProtectedRoute = () => {
     if (loading) {
         return (
             <div className="flex justify-center items-center h-screen">
-                <div
-                    className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-orange-500"></div>
             </div>
         );
     }
 
-    // If not authenticated, redirect to login
+    // If user is not authenticated, redirect to login with return path
     if (!user) {
-        return <Navigate to="/login" replace/>;
+        // Store the path they were trying to access
+        const returnPath = window.location.pathname;
+        sessionStorage.setItem('returnPath', returnPath);
+        return <Navigate to="/login" replace />;
     }
 
-    // If authenticated, render the child routes
-    return <Outlet/>;
+    // If user is authenticated, render the protected route
+    return <Outlet />;
 };
 
 export default ProtectedRoute;

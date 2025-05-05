@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-// Test endpoint to verify API connectivity
+// Test endpoint
 router.get('/test', async (req, res) => {
     try {
         res.json({
@@ -18,8 +18,7 @@ router.get('/test', async (req, res) => {
 router.get('/', async (req, res) => {
     try {
         const pool = req.pool;
-        const result = await pool.request().query('SELECT * FROM Ingredients ORDER BY name ');
-
+        const result = await pool.request().query('SELECT * FROM Ingredients ORDER BY name');
         res.json(result.recordset);
     } catch (err) {
         console.error('Error in GET /ingredients:', err);
@@ -37,12 +36,9 @@ router.get('/:id', async (req, res) => {
         const pool = req.pool;
         const ingredientId = parseInt(req.params.id);
 
-        const query = `
-            SELECT *
-            FROM Ingredients
-            WHERE ingredient_id = ${ingredientId}
-        `;
-        const result = await pool.request().query(query);
+        const result = await pool.request()
+            .input('ingredientId', ingredientId)
+            .query('SELECT * FROM Ingredients WHERE ingredient_id = @ingredientId');
 
         if (result.recordset.length === 0) {
             return res.status(404).json({
@@ -66,15 +62,17 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         const pool = req.pool;
-        const {name, nutritional_info} = req.body;
+        const {name, nutritional_info = ''} = req.body;
 
-        const insertQuery = `
-            INSERT INTO Ingredients (name, nutritional_info)
-            VALUES ('${name}', '${nutritional_info || ''}');
-            SELECT SCOPE_IDENTITY() AS ingredient_id;
-        `;
+        const result = await pool.request()
+            .input('name', name)
+            .input('nutritional_info', nutritional_info)
+            .query(`
+                INSERT INTO Ingredients (name, nutritional_info)
+                VALUES (@name, @nutritional_info);
+                SELECT SCOPE_IDENTITY() AS ingredient_id;
+            `);
 
-        const result = await pool.request().query(insertQuery);
         const newIngredientId = result.recordset[0].ingredient_id;
 
         res.status(201).json({
@@ -97,16 +95,18 @@ router.put('/:id', async (req, res) => {
     try {
         const pool = req.pool;
         const ingredientId = parseInt(req.params.id);
-        const {name, nutritional_info} = req.body;
+        const {name, nutritional_info = ''} = req.body;
 
-        const updateQuery = `
-            UPDATE Ingredients
-            SET name = '${name}',
-                nutritional_info = '${nutritional_info || ''}'
-            WHERE ingredient_id = ${ingredientId};
-        `;
-
-        const result = await pool.request().query(updateQuery);
+        const result = await pool.request()
+            .input('ingredientId', ingredientId)
+            .input('name', name)
+            .input('nutritional_info', nutritional_info)
+            .query(`
+                UPDATE Ingredients
+                SET name = @name,
+                    nutritional_info = @nutritional_info
+                WHERE ingredient_id = @ingredientId
+            `);
 
         if (result.rowsAffected[0] === 0) {
             return res.status(404).json({
@@ -135,13 +135,11 @@ router.delete('/:id', async (req, res) => {
         const pool = req.pool;
         const ingredientId = parseInt(req.params.id);
 
-        // Check if the ingredient is used in any recipes
-        const checkQuery = `
-            SELECT COUNT(*) AS count
-            FROM RecipeIngredients
-            WHERE ingredient_id = ${ingredientId}
-        `;
-        const checkResult = await pool.request().query(checkQuery);
+        const checkResult = await pool.request()
+            .input('ingredientId', ingredientId)
+            .query(`SELECT COUNT(*) AS count
+                    FROM RecipeIngredients
+                    WHERE ingredient_id = @ingredientId`);
 
         if (checkResult.recordset[0].count > 0) {
             return res.status(400).json({
@@ -150,13 +148,11 @@ router.delete('/:id', async (req, res) => {
             });
         }
 
-        // Also check UserPantry
-        const checkPantryQuery = `
-            SELECT COUNT(*) AS count
-            FROM UserPantry
-            WHERE ingredient_id = ${ingredientId}
-        `;
-        const checkPantryResult = await pool.request().query(checkPantryQuery);
+        const checkPantryResult = await pool.request()
+            .input('ingredientId', ingredientId)
+            .query(`SELECT COUNT(*) AS count
+                    FROM UserPantry
+                    WHERE ingredient_id = @ingredientId`);
 
         if (checkPantryResult.recordset[0].count > 0) {
             return res.status(400).json({
@@ -165,15 +161,11 @@ router.delete('/:id', async (req, res) => {
             });
         }
 
-        const deleteQuery = `
-            DELETE
-            FROM Ingredients
-            WHERE ingredient_id = ${ingredientId}
-        `;
+        const deleteResult = await pool.request()
+            .input('ingredientId', ingredientId)
+            .query('DELETE FROM Ingredients WHERE ingredient_id = @ingredientId');
 
-        const result = await pool.request().query(deleteQuery);
-
-        if (result.rowsAffected[0] === 0) {
+        if (deleteResult.rowsAffected[0] === 0) {
             return res.status(404).json({
                 status: 'error',
                 message: 'Ingredient not found'
@@ -198,16 +190,12 @@ router.delete('/:id', async (req, res) => {
 router.get('/search/:query', async (req, res) => {
     try {
         const pool = req.pool;
-        const searchQuery = req.params.query;
+        const searchQuery = `%${req.params.query}%`;
 
-        const query = `
-            SELECT *
-            FROM Ingredients
-            WHERE name LIKE '%${searchQuery}%'
-            ORDER BY name
-        `;
+        const result = await pool.request()
+            .input('searchQuery', searchQuery)
+            .query('SELECT * FROM Ingredients WHERE name LIKE @searchQuery ORDER BY name');
 
-        const result = await pool.request().query(query);
         res.json(result.recordset);
     } catch (err) {
         console.error('Error in GET /ingredients/search/:query:', err);
