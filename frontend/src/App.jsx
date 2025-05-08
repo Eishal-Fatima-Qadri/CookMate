@@ -52,12 +52,12 @@ const AppContent = () => {
           <Route path="/register" element={<Register />} />
 
           {/* Protected Routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/recipes" element={<RecipePage />} />
-            <Route path="/recipe/:id" element={<RecipeDetail />} />
-            <Route path="/pantry" element={<Pantry />} />
-            <Route path="/suggestions" element={<Suggestions />} />
-          </Route>
+          {/* <Route element={<ProtectedRoute />}> */}
+          <Route path="/recipes" element={<RecipePage />} />
+          <Route path="/recipe/:id" element={<RecipeDetail />} />
+          <Route path="/pantry" element={<Pantry />} />
+          <Route path="/suggestions" element={<Suggestions />} />
+          {/* </Route> */}
 
           {/* Admin Routes */}
           <Route

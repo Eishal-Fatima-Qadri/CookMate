@@ -104,7 +104,7 @@ const RecipePage = () => {
   const handleSubmitReview = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("/api/reviews", {
+      await api.post("/reviews", {
         recipe_id: selectedRecipe?.recipe_id,
         user_name: userName,
         rating: userRating,
@@ -455,7 +455,7 @@ const RecipePage = () => {
         </div>
       </div>
 
-      {/* Review Modal - Using native React components instead of Headless UI */}
+      {/* Review Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-10 overflow-y-auto">
           <div className="flex min-h-screen items-center justify-center px-4 pt-4 pb-20 text-center sm:block sm:p-0">
@@ -492,19 +492,22 @@ const RecipePage = () => {
                         <label className="block text-sm font-medium text-gray-700">
                           Rating
                         </label>
-                        <select
-                          value={userRating}
-                          onChange={(e) =>
-                            setUserRating(parseInt(e.target.value))
-                          }
-                          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
-                        >
-                          {[1, 2, 3, 4, 5].map((rating) => (
-                            <option key={rating} value={rating}>
-                              {rating} Star{rating !== 1 ? "s" : ""}
-                            </option>
+                        <div className="flex items-center gap-2">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() => setUserRating(star)}
+                              className={`text-2xl ${
+                                userRating >= star
+                                  ? "text-yellow-400"
+                                  : "text-gray-300"
+                              } hover:scale-110 transition-transform`}
+                            >
+                              ★
+                            </button>
                           ))}
-                        </select>
+                        </div>
                       </div>
 
                       <div className="mb-4">
