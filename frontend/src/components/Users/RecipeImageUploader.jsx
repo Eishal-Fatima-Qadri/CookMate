@@ -57,6 +57,7 @@ export default function RecipeImageUploader({recipeId}) {
 
         setImage(selectedFile);
         setError(null);
+        setSuccessMessage('');
 
         // Create preview
         const reader = new FileReader();
@@ -110,33 +111,34 @@ export default function RecipeImageUploader({recipeId}) {
     };
 
     return (
-        <div className="mt-4">
-            <h2 className="text-xl font-bold mb-4">Recipe Image</h2>
-
+        <div>
             {error && (
-                <div
-                    className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <div className="mb-6 bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-lg flex items-start">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 mt-0.5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
                     {error}
                 </div>
             )}
 
             {successMessage && (
-                <div
-                    className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                <div className="mb-6 bg-green-50 border border-green-100 text-green-700 px-4 py-3 rounded-lg flex items-start">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 mt-0.5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
                     {successMessage}
                 </div>
             )}
 
             {/* Display existing image */}
             {imageUrl && (
-                <div className="mb-6">
-                    <h3 className="text-lg font-medium mb-2">Current Image</h3>
-                    <div
-                        className="border rounded-lg overflow-hidden w-full max-w-lg">
+                <div className="mb-6 space-y-3">
+                    <h3 className="font-medium text-gray-700">Current Image</h3>
+                    <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                         <img
                             src={imageUrl}
                             alt="Recipe"
-                            className="w-full h-auto"
+                            className="w-full h-auto object-cover"
                             onError={(e) => {
                                 e.target.src = 'https://via.placeholder.com/400x300?text=Image+Not+Found';
                             }}
@@ -145,52 +147,96 @@ export default function RecipeImageUploader({recipeId}) {
                 </div>
             )}
 
-            <div className="mb-6">
-                <label className="block text-sm font-medium mb-2">
-                    Upload New Image
-                </label>
-                <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="block w-full text-sm text-gray-500
-                    file:mr-4 file:py-2 file:px-4
-                    file:rounded file:border-0
-                    file:text-sm file:font-semibold
-                    file:bg-blue-50 file:text-blue-700
-                    hover:file:bg-blue-100"
-                />
-                <p className="mt-1 text-sm text-gray-500">
-                    Supported formats: JPG, PNG. Max size: 5MB
-                </p>
+            <div className="mb-6 space-y-3">
+                {/* File input wrapper */}
+                <div className="space-y-1">
+                    <label className="block text-sm font-medium text-gray-700">
+                        Upload New Image
+                    </label>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg px-6 py-8 text-center transition hover:border-blue-400 focus-within:border-blue-400">
+                        <div className="space-y-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                            <div className="flex text-sm text-gray-600">
+                                <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none">
+                                    <span>Upload a file</span>
+                                    <input
+                                        id="file-upload"
+                                        name="file-upload"
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageChange}
+                                        className="sr-only"
+                                    />
+                                </label>
+                                <p className="pl-1">or drag and drop</p>
+                            </div>
+                            <p className="text-xs text-gray-500">
+                                PNG, JPG, JPEG up to 5MB
+                            </p>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             {/* Image preview */}
             {previewUrl && (
-                <div className="mb-6">
-                    <h3 className="text-lg font-medium mb-2">Preview</h3>
-                    <div
-                        className="border rounded-lg overflow-hidden w-full max-w-lg">
+                <div className="mb-6 space-y-3">
+                    <h3 className="font-medium text-gray-700">Preview</h3>
+                    <div className="border border-gray-200 rounded-lg overflow-hidden shadow-sm">
                         <img
                             src={previewUrl}
                             alt="Preview"
-                            className="w-full h-auto"
+                            className="w-full h-auto object-cover"
                         />
                     </div>
                 </div>
             )}
 
-            <button
-                onClick={uploadImage}
-                disabled={!image || uploading}
-                className={`px-4 py-2 rounded text-white ${
-                    !image || uploading
-                        ? 'bg-gray-400 cursor-not-allowed'
-                        : 'bg-blue-500 hover:bg-blue-600'
-                }`}
-            >
-                {uploading ? 'Uploading...' : 'Upload Image'}
-            </button>
+            <div className="flex space-x-3 mt-6">
+                <button
+                    onClick={uploadImage}
+                    disabled={!image || uploading}
+                    className={`flex items-center px-6 py-2 rounded-lg shadow-sm text-white ${
+                        !image || uploading
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : 'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition'
+                    }`}
+                >
+                    {uploading ? (
+                        <>
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Uploading...
+                        </>
+                    ) : (
+                        <>
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                            </svg>
+                            Upload Image
+                        </>
+                    )}
+                </button>
+
+                {image && (
+                    <button
+                        onClick={() => {
+                            setImage(null);
+                            setPreviewUrl('');
+                        }}
+                        className="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition flex items-center"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        Cancel
+                    </button>
+                )}
+            </div>
         </div>
     );
 }

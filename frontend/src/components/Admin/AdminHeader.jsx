@@ -23,15 +23,6 @@ export default function AdminHeader() {
                     <Link to="/admin/ingredients" className="hover:underline">
                         Ingredient Database
                     </Link>
-                    <Link to="/admin/submissions" className="hover:underline">
-                        Recipe Approvals
-                    </Link>
-                    <Link to="/admin/users" className="hover:underline">
-                        User Management
-                    </Link>
-                    <Link to="/admin/activity" className="hover:underline">
-                        System Activity
-                    </Link>
 
                     {user ? (
                         <>
