@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { Fragment } from "react";
+import { Dialog, Transition } from "@headlessui/react";
 
 const api = axios.create({
   baseURL: "http://localhost:5000/api",
@@ -16,6 +18,11 @@ const RecipePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [debugInfo, setDebugInfo] = useState(null);
+  const [selectedRecipe, setSelectedRecipe] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [userName, setUserName] = useState("");
+  const [userRating, setUserRating] = useState(5);
+  const [userComment, setUserComment] = useState("");
 
   const fetchRecipes = async () => {
     setLoading(true);
@@ -86,6 +93,32 @@ const RecipePage = () => {
 
     return () => clearTimeout(delaySearch);
   }, [search]);
+
+  //review section
+  const openReviewModal = (recipe) => {
+    setSelectedRecipe(recipe);
+    setIsModalOpen(true);
+    setUserName("");
+    setUserRating(5);
+    setUserComment("");
+  };
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post("/api/reviews", {
+        recipe_id: selectedRecipe?.recipe_id,
+        user_name: userName,
+        rating: userRating,
+        comment: userComment,
+      });
+      setIsModalOpen(false);
+      alert("✅ Review submitted!");
+    } catch (err) {
+      console.error("Review submission failed:", err);
+      alert("❌ Failed to submit review");
+    }
+  };
 
   return (
     <div className="bg-gray-100 min-h-screen">
@@ -240,6 +273,12 @@ const RecipePage = () => {
                           >
                             View Details
                           </Link>
+                          <button
+                            onClick={() => openReviewModal(recipe)}
+                            className="flex-1 text-center bg-[#7A5AFF] hover:bg-[#6B4EE2] text-white px-4 py-2 rounded"
+                          >
+                            Give Review
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -254,6 +293,64 @@ const RecipePage = () => {
           </>
         )}
       </main>
+
+      {/* Review Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6 relative">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">
+              Review: {selectedRecipe?.title}
+            </h3>
+            <form onSubmit={handleSubmitReview} className="space-y-4">
+              <input
+                type="text"
+                placeholder="Your name"
+                value={userName}
+                onChange={(e) => setUserName(e.target.value)}
+                required
+                className="w-full border border-gray-300 rounded px-4 py-2"
+              />
+              <div className="flex items-center gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setUserRating(star)}
+                    className={`text-2xl ${
+                      userRating >= star ? "text-yellow-400" : "text-gray-300"
+                    } hover:scale-110 transition-transform`}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+              <textarea
+                placeholder="Write your review..."
+                value={userComment}
+                onChange={(e) => setUserComment(e.target.value)}
+                rows={4}
+                required
+                className="w-full border border-gray-300 rounded px-4 py-2"
+              />
+              <div className="flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-[#55B1AB] hover:bg-[#479b95] text-white px-4 py-2 rounded"
+                >
+                  Submit Review
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
