@@ -13,6 +13,7 @@ const router = express.Router();
 
 // Public routes
 router.post('/login', loginUser);
+router.post('/register', registerUser);
 router.post('/', registerUser);
 router.get('/profile', protect, getUserProfile);
 router.put('/profile', protect, updateUserProfile);
