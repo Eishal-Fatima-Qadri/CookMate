@@ -55,6 +55,8 @@ const loginUser = async (req, res) => {
 // @desc    Register a new user
 // @route   POST /api/users
 // @access  Public
+// userController.js - Add registration endpoint using stored procedure
+
 const registerUser = async (req, res) => {
     try {
         const {
@@ -66,63 +68,49 @@ const registerUser = async (req, res) => {
             favorite_cuisines = ''
         } = req.body;
 
+        // Validate required fields
         if (!username || !email || !password) {
-            return res.status(400).json({message: 'Please provide all required fields'});
+            return res.status(400).json({ message: 'Please provide all required fields' });
         }
 
         const pool = req.pool;
-        const userCheck = await pool.request()
-            .input('email', sql.VarChar(100), email)
-            .query('SELECT email FROM Users WHERE email = @email');
 
-        if (userCheck.recordset.length > 0) {
-            return res.status(400).json({message: 'User already exists'});
-        }
-
+        // Hash the password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const insertQuery = `
-            INSERT INTO Users (username, email, password, role,
-                               dietary_preferences, allergens,
-                               favorite_cuisines,
-                               created_at)
-            OUTPUT INSERTED.user_id,
-                   INSERTED.username,
-                   INSERTED.email,
-                   INSERTED.role
-            VALUES (@username, @email, @password, @role, @dietary_preferences,
-                    @allergens, @favorite_cuisines,
-                    GETDATE())
-        `;
-
+        // Call the stored procedure for user registration
         const result = await pool.request()
             .input('username', sql.VarChar(50), username)
             .input('email', sql.VarChar(100), email)
             .input('password', sql.VarChar(255), hashedPassword)
-            .input('role', sql.VarChar(10), 'user') // Default role
             .input('dietary_preferences', sql.VarChar(255), dietary_preferences)
             .input('allergens', sql.VarChar(255), allergens)
             .input('favorite_cuisines', sql.VarChar(255), favorite_cuisines)
-            .query(insertQuery);
+            .execute('sp_RegisterUser');
 
-        if (result.recordset && result.recordset[0]) {
-            const newUser = result.recordset[0];
-
-            res.status(201).json({
-                user_id: newUser.user_id,
-                username: newUser.username,
-                email: newUser.email,
-                role: newUser.role,
-                token: generateToken(newUser.user_id)
-            });
-        } else {
-            res.status(400).json({message: 'Invalid user data'});
+        // Check if user was created (the SP returns NULL user_id if email exists)
+        if (!result.recordset[0] || !result.recordset[0].user_id) {
+            return res.status(400).json({ message: 'Email is already registered' });
         }
+
+        const newUser = result.recordset[0];
+
+        // Generate JWT token
+        const token = generateToken(newUser.user_id);
+
+        // Return user data and token
+        res.status(201).json({
+            user_id: newUser.user_id,
+            username: newUser.username,
+            email: newUser.email,
+            role: newUser.role,
+            token
+        });
 
     } catch (error) {
         console.error('Registration error:', error);
-        res.status(500).json({message: 'Server Error'});
+        res.status(500).json({ message: 'Server Error', error: error.message });
     }
 };
 

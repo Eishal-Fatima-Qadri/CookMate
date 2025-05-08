@@ -4,6 +4,8 @@ const { poolPromise } = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
 const recipeRoutes = require("./routes/recipes");
 const ingredientRoutes = require("./routes/ingredients");
+const uploadRoutes = require("./routes/upload");
+const adminRoutes = require("./routes/admin_routes");
 const path = require("path");
 const app = express();
 
@@ -33,6 +35,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/recipes", recipeRoutes);
 app.use("/api/ingredients", ingredientRoutes);
 app.use("/api/reviews", require("./routes/reviews"));
+app.use("/api/recipes", uploadRoutes);
+app.use("/api/admin", adminRoutes);
 
 // API root response
 app.get("/api", (req, res) => {
