@@ -153,86 +153,90 @@ export default function RecipeIngredientsManager({recipeId}) {
     };
 
     return (
-        <div className="mt-8">
-            <h2 className="text-xl font-bold mb-4">Recipe Ingredients</h2>
+        <div className="space-y-6">
+            {/* Title */}
+            <h2 className="text-2xl font-bold text-gray-800">Recipe Ingredients</h2>
 
-            {error && <p className="text-red-600 mb-4">{error}</p>}
+            {/* Error Banner */}
+            {error && (
+                <div className="bg-red-50 border border-red-100 text-red-700 px-4 py-3 rounded-lg">
+                    {error}
+                </div>
+            )}
 
-            <div className="mb-4">
-                <table className="min-w-full bg-white border shadow-sm">
-                    <thead>
-                    <tr className="bg-gray-100">
-                        <th className="py-2 px-4 border-b text-left">Ingredient</th>
-                        <th className="py-2 px-4 border-b text-left">Quantity</th>
-                        <th className="py-2 px-4 border-b text-left">Unit</th>
-                        <th className="py-2 px-4 border-b text-left">Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {ingredients.length === 0 ? (
+            {/* Ingredients Table */}
+            <div className="bg-white rounded-xl shadow overflow-hidden">
+                <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
                         <tr>
-                            <td colSpan="4"
-                                className="py-4 px-4 text-center text-gray-500">
-                                No ingredients added yet
-                            </td>
+                            <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Ingredient</th>
+                            <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                            <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Unit</th>
+                            <th className="px-6 py-3 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
-                    ) : (
-                        ingredients.map((ingredient, index) => (
-                            <tr key={`${ingredient.ingredient_id}-${index}`}
-                                className="border-b hover:bg-gray-50">
-                                <td className="py-2 px-4">{ingredient.name}</td>
-                                <td className="py-2 px-4">{ingredient.quantity}</td>
-                                <td className="py-2 px-4">{ingredient.unit}</td>
-                                <td className="py-2 px-4">
-                                    <button
-                                        onClick={() => handleEditClick(ingredient, index)}
-                                        className="text-blue-500 hover:text-blue-700 mr-2"
-                                    >
-                                        Edit
-                                    </button>
-                                    <button
-                                        onClick={() => handleDeleteIngredient(ingredient.ingredient_id)}
-                                        className="text-red-500 hover:text-red-700"
-                                    >
-                                        Remove
-                                    </button>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                        {ingredients.length === 0 ? (
+                            <tr>
+                                <td colSpan="4" className="px-6 py-4 text-center text-gray-500">
+                                    No ingredients added yet
                                 </td>
                             </tr>
-                        ))
-                    )}
+                        ) : (
+                            ingredients.map((ingredient, index) => (
+                                <tr key={`${ingredient.ingredient_id}-${index}`} className="hover:bg-gray-50">
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{ingredient.name}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{ingredient.quantity}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{ingredient.unit}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                        <button
+                                            onClick={() => handleEditClick(ingredient, index)}
+                                            className="text-blue-600 hover:text-blue-800 mr-4"
+                                        >
+                                            Edit
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteIngredient(ingredient.ingredient_id)}
+                                            className="text-red-600 hover:text-red-800"
+                                        >
+                                            Remove
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
                     </tbody>
                 </table>
             </div>
 
-            {/* Add a new ingredient button */}
+            {/* Add Ingredient Button */}
             {!isAddMode && editIndex === null && (
                 <button
                     onClick={() => setIsAddMode(true)}
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                    className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700"
                 >
                     Add Ingredient
                 </button>
             )}
 
-            {/* Add/Edit an ingredient form */}
+            {/* Add/Edit Form */}
             {(isAddMode || editIndex !== null) && (
                 <form
                     onSubmit={editIndex !== null ? handleUpdateIngredient : handleAddIngredient}
-                    className="bg-gray-50 p-4 rounded border mt-4"
+                    className="space-y-6 bg-white p-6 rounded-xl shadow"
                 >
-                    <h3 className="text-lg font-medium mb-3">
+                    <h3 className="text-xl font-semibold text-gray-800">
                         {editIndex !== null ? 'Edit Ingredient' : 'Add New Ingredient'}
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
-                            <label
-                                className="block text-sm font-medium mb-1">Ingredient</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Ingredient</label>
                             {editIndex !== null ? (
                                 <input
                                     type="text"
                                     value={ingredients[editIndex]?.name || ''}
                                     disabled
-                                    className="border rounded px-3 py-2 w-full bg-gray-100"
+                                    className="border border-gray-300 rounded-lg px-4 py-2 w-full bg-gray-100"
                                 />
                             ) : (
                                 <select
@@ -240,7 +244,7 @@ export default function RecipeIngredientsManager({recipeId}) {
                                     value={newIngredient.ingredient_id}
                                     onChange={handleInputChange}
                                     required
-                                    className="border rounded px-3 py-2 w-full"
+                                    className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                                 >
                                     <option value="">Select Ingredient</option>
                                     {availableIngredients.map(ingredient => (
@@ -253,8 +257,7 @@ export default function RecipeIngredientsManager({recipeId}) {
                             )}
                         </div>
                         <div>
-                            <label
-                                className="block text-sm font-medium mb-1">Quantity</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
                             <input
                                 type="number"
                                 name="quantity"
@@ -263,12 +266,11 @@ export default function RecipeIngredientsManager({recipeId}) {
                                 step="0.01"
                                 min="0"
                                 required
-                                className="border rounded px-3 py-2 w-full"
+                                className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                             />
                         </div>
                         <div>
-                            <label
-                                className="block text-sm font-medium mb-1">Unit</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
                             <input
                                 type="text"
                                 name="unit"
@@ -276,22 +278,32 @@ export default function RecipeIngredientsManager({recipeId}) {
                                 onChange={handleInputChange}
                                 required
                                 placeholder="g, ml, cups, tbsp, etc."
-                                className="border rounded px-3 py-2 w-full"
+                                className="border border-gray-300 rounded-lg px-4 py-2 w-full focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                             />
                         </div>
                     </div>
-                    <div className="flex space-x-2 mt-4">
+                    <div className="flex gap-4 pt-2">
                         <button
                             type="submit"
                             disabled={loading}
-                            className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:bg-green-300"
+                            className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 flex items-center"
                         >
-                            {loading ? 'Saving...' : editIndex !== null ? 'Update' : 'Add'}
+                            {loading ? (
+                                <>
+                                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Saving...
+                                </>
+                            ) : (
+                                editIndex !== null ? 'Update' : 'Add'
+                            )}
                         </button>
                         <button
                             type="button"
                             onClick={cancelEdit}
-                            className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                            className="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-50"
                         >
                             Cancel
                         </button>
